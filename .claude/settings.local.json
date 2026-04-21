@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"c:\\\\Users\\\\V33rb\\\\Downloads\\\\verdikt-final \\(2\\)\\\\verdikt\")"
+      "Bash(dir \"c:\\\\Users\\\\V33rb\\\\Downloads\\\\verdikt-final \\(2\\)\\\\verdikt\")",
+      "WebFetch(domain:abuse.ch)",
+      "WebSearch"
     ]
   }
 }

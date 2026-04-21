@@ -16,22 +16,19 @@ const PRIVATE_RANGES = [
 ];
 
 const LOG_EXTRACT = {
-  // URLs (before IP to avoid partial matches)
+  // URLs before IP to avoid partial matches
   url:    /https?:\/\/(?:[\[\(]?\.\]?\)?)?[\w\-\.]+(?::\d+)?(?:\/[^\s"',;>)\]]*)?/gi,
-  // IPv4 — including defanged: 1[.]2[.]3[.]4  1(.)2(.)3(.)4
+  // IPv4 including defanged forms: 1[.]2[.]3[.]4  1(.)2(.)3(.)4
   ipv4:   /\b(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})\b/g,
-  // Hashes by length
   sha256: /\b[a-fA-F0-9]{64}\b/g,
   sha1:   /\b[a-fA-F0-9]{40}\b/g,
   md5:    /\b[a-fA-F0-9]{32}\b/g,
-  // Email
   email:  /\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/g,
-  // Domain (conservative — after email/URL to avoid false positives)
+  // Domain last — conservative to avoid false positives on email/URL substrings
   domain: /\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+(?:com|net|org|io|gov|edu|mil|int|co|uk|de|fr|ru|cn|jp|br|au|nl|se|no|fi|dk|pl|it|es|pt|be|ch|at|nz|za|in|sg|hk|tw|kr|mx|ar|cl|ph|th|id|vn|pk|bd|ng|ke|gh|tz|ug|zw|biz|info|mobi|name|museum|coop|aero|pro|tel|cat|xxx|travel|jobs|app|dev|cloud|tech|online|site|web|store|shop|blog|news|media|digital|ai)\b/gi,
 };
 
 const FIELD_LABELS = [
-  // Common firewall formats
   /src[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
   /dst[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
   /source[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
@@ -40,17 +37,14 @@ const FIELD_LABELS = [
   /dstip[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
   /client_ip[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
   /remote_addr[\s=:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
-  // Email header fields
   /X-Originating-IP[\s:]+\[?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\]?/gi,
   /Received:.*?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
   /X-Forwarded-For[\s:]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi,
-  // File hash fields
   /hash[\s=:"]+([a-fA-F0-9]{32,128})/gi,
   /md5[\s=:"]+([a-fA-F0-9]{32})/gi,
   /sha256[\s=:"]+([a-fA-F0-9]{64})/gi,
   /sha1[\s=:"]+([a-fA-F0-9]{40})/gi,
   /checksum[\s=:"]+([a-fA-F0-9]{32,64})/gi,
-  // URL fields
   /url[\s=:"']+([^\s"',;>\]]+)/gi,
   /request[\s=:"']+([^\s"',;>\]]+)/gi,
   /hostname[\s=:"']+([a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,})/gi,
@@ -64,14 +58,14 @@ function looksLikeLog(text) {
     /\bX-Originating-IP\b/i,
     /\bX-Forwarded-For\b/i,
     /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\b/,
-    /\b(TRAFFIC|THREAT|SYSTEM|CONFIG|HIPMATCH)\b/,  // Palo Alto
+    /\b(TRAFFIC|THREAT|SYSTEM|CONFIG|HIPMATCH)\b/,
     /\bFortiGate\b|\bFortiOS\b/i,
-    /\bEventCode=|\bSignatureID=/i,  // SIEM
-    /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,  // ISO timestamp
+    /\bEventCode=|\bSignatureID=/i,
+    /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
     /\bSEVERITY=|\bPRIORITY=|\bFACILITY=/i,
     /\bsyslog\b|\bsyslogd\b/i,
-    /\[.*?\]\s+\[.*?\]/,  // bracketed fields
-    /<\d+>/,  // syslog priority
+    /\[.*?\]\s+\[.*?\]/,
+    /<\d+>/,
   ];
   return logIndicators.some(p => p.test(text));
 }
@@ -80,7 +74,6 @@ function extractFromLog(text) {
   const found = new Set();
   const results = [];
 
-  // First pass: field label extractions (highest confidence)
   for (const pattern of FIELD_LABELS) {
     let m;
     pattern.lastIndex = 0;
@@ -90,8 +83,6 @@ function extractFromLog(text) {
     }
   }
 
-  // Second pass: freeform regex extraction
-  // URLs first
   let m;
   LOG_EXTRACT.url.lastIndex = 0;
   while ((m = LOG_EXTRACT.url.exec(text)) !== null) {
@@ -99,7 +90,6 @@ function extractFromLog(text) {
     if (!found.has(raw.toLowerCase())) { found.add(raw.toLowerCase()); results.push(raw); }
   }
 
-  // IPv4 (including defanged)
   LOG_EXTRACT.ipv4.lastIndex = 0;
   while ((m = LOG_EXTRACT.ipv4.exec(text)) !== null) {
     const ip = `${m[1]}.${m[2]}.${m[3]}.${m[4]}`;
@@ -115,7 +105,6 @@ function extractFromLog(text) {
     }
   }
 
-  // Emails
   LOG_EXTRACT.email.lastIndex = 0;
   while ((m = LOG_EXTRACT.email.exec(text)) !== null) {
     const e = m[0].toLowerCase();
@@ -152,7 +141,6 @@ function wasDefanged(original, normalized) {
 function parseIOCs(raw) {
   if (!raw?.trim()) return [];
 
-  // Auto-detect log vs clean IOC list
   const isLog = looksLikeLog(raw);
   const textToProcess = isLog ? extractFromLog(raw) : raw;
 

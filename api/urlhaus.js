@@ -18,10 +18,12 @@ export default async function handler(req, res) {
     const body = new URLSearchParams(sha256
       ? { sha256_hash: sha256.toLowerCase() }
       : { url: urlParam });
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (process.env.ABUSECH_AUTH_KEY) headers['Auth-Key'] = process.env.ABUSECH_AUTH_KEY;
     const upstream = await fetch(endpoint, {
       method: 'POST',
       body,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      headers,
     });
     const data = await upstream.json();
     return res.status(upstream.status).json(data);

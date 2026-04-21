@@ -284,7 +284,6 @@ function buildModalContent(entry) {
 
     <div class="modal-sources-divider"></div>`;
 
-  // Source blocks
   if (vt)     html += modalSource('VIRUSTOTAL',       'var(--vt)',  vt,  vtRows(vt),     vt.tags,  vt.link,    '↗ VT');
   if (ab)     html += modalSource('ABUSEIPDB',        'var(--ab)',  ab,  abRows(ab),     [],        ab.link,    '↗ AbuseIPDB');
   if (otx)    html += modalSource('ALIENVAULT OTX',   'var(--otx)', otx, otxRows(otx),  otx.tags,  otx.link,   '↗ OTX');

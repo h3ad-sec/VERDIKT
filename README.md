@@ -46,12 +46,22 @@ In your Vercel project dashboard:
 
 Add these variables:
 
-| Variable Name | Value | Required |
-|---------------|-------|----------|
-| `VT_API_KEY` | Your VirusTotal API key | For VT source |
-| `ABUSEIPDB_API_KEY` | Your AbuseIPDB API key | For AbuseIPDB source |
-| `OTX_API_KEY` | Your AlienVault OTX API key | For OTX source |
-| `VT_PAID` | `true` or `false` | Controls rate limiting |
+| Variable | Required | Get it from | Notes |
+|----------|----------|-------------|-------|
+| `VT_API_KEY` | Recommended | [virustotal.com](https://www.virustotal.com) → Sign up → API Key | Free: 4 req/min, 500/day. Paid: unlimited |
+| `ABUSEIPDB_API_KEY` | Recommended | [abuseipdb.com](https://www.abuseipdb.com) → Account → API | Free: 1,000 req/day. IPs only |
+| `OTX_API_KEY` | Recommended | [otx.alienvault.com](https://otx.alienvault.com) → Settings → API Key | Free, generous limits. Covers all IOC types |
+| `ABUSECH_AUTH_KEY` | Recommended | [abuse.ch](https://abuse.ch/api) → Register free | Required for MalwareBazaar + URLhaus since late 2024 |
+| `VT_PAID` | Optional | — | Set to `true` if you have a paid VT subscription. Removes rate limiting |
+
+**What happens without each key:**
+- No `VT_API_KEY` → VirusTotal skipped for all IOCs
+- No `ABUSEIPDB_API_KEY` → AbuseIPDB skipped for all IPs
+- No `OTX_API_KEY` → OTX skipped for all IOCs
+- No `ABUSECH_AUTH_KEY` → MalwareBazaar and URLhaus return 401, shown as error
+- No `VT_PAID` → defaults to free-tier rate limiting (4 req/min token bucket)
+
+At minimum, add `VT_API_KEY` — VirusTotal covers the widest range of IOC types and carries the most scoring weight.
 
 Set each variable for **Production**, **Preview**, and **Development** environments.
 
@@ -70,6 +80,7 @@ vercel env add VT_API_KEY       # Add each key interactively
 vercel env add ABUSEIPDB_API_KEY
 vercel env add OTX_API_KEY
 vercel env add VT_PAID
+vercel env add ABUSECH_AUTH_KEY
 vercel --prod                   # Redeploy to production
 ```
 
@@ -120,8 +131,8 @@ Click the **DARK·G / DARK·B / DARK·R / LIGHT** button in the header to cycle 
 | VirusTotal | ✅ | IP · Domain · URL · MD5/SHA1/SHA256/SHA512 | 4 req/min · 500/day (free) |
 | AbuseIPDB | ✅ | IPv4 · IPv6 | 1,000 req/day |
 | AlienVault OTX | ✅ | All types incl. Email | Generous |
-| MalwareBazaar | ❌ Free | MD5 · SHA1 · SHA256 | No limit |
-| URLhaus | ❌ Free | URLs · SHA256 | No limit |
+| MalwareBazaar | ✅ Free (abuse.ch) | MD5 · SHA1 · SHA256 | No limit |
+| URLhaus | ✅ Free (abuse.ch) | URLs · SHA256 | No limit |
 | Shodan InternetDB | ❌ Free | IPv4 | No limit |
 
 **Why AbuseIPDB doesn't check hashes:**  
@@ -179,6 +190,56 @@ verdikt/
 |----------|--------|
 | `Ctrl / Cmd + Enter` | Run scan |
 | `Esc` | Close detail modal |
+
+---
+
+## Scoring Logic
+
+Each IOC is scored 0–100 and assigned a verdict. The score is normalized against the maximum possible for that IOC type — so a domain (max 55 raw points from VT + OTX) is scored fairly against an IP (max 93 raw points from all sources).
+
+### Source weights
+
+| Source | Max contribution | Notes |
+|--------|-----------------|-------|
+| VirusTotal | 40 pts | `(malicious engines / total engines) × 40` — only counts if `total > 0` |
+| AbuseIPDB | 30 pts | `(abuse score / 100) × 30` — IPs only |
+| AlienVault OTX | 15 pts | `(pulse count / 10) × 15`, capped at 15 |
+| MalwareBazaar | 10 pts | Binary — found in DB = 10, not found = 0 |
+| URLhaus | 10 pts | Binary — found in DB = 10, not found = 0 |
+| Shodan CVEs | up to 5 pts | 1 pt per CVE, capped at 5 |
+| Shodan threat tag | +3 pts | Flat bonus for TOR/honeypot/malware tags |
+
+### Maximum score per IOC type
+
+| Type | VT | AbuseIPDB | OTX | MB | URLhaus | Shodan | Max |
+|------|----|-----------|-----|----|---------|--------|-----|
+| IPv4 | 40 | 30 | 15 | — | — | 8 | **93** |
+| IPv6 | 40 | 30 | 15 | — | — | — | **85** |
+| Domain | 40 | — | 15 | — | — | — | **55** |
+| URL | 40 | — | 15 | — | 10 | — | **65** |
+| Email | — | — | 15 | — | — | — | **15** |
+| MD5 / SHA1 | 40 | — | 15 | 10 | — | — | **65** |
+| SHA256 | 40 | — | 15 | 10 | 10 | — | **75** |
+| SHA512 | 40 | — | 15 | — | — | — | **55** |
+
+### Verdict thresholds
+
+Verdicts use both the normalized score and direct signal flags — whichever triggers first wins:
+
+| Verdict | Triggers when… |
+|---------|----------------|
+| 🔴 **MALICIOUS / BLOCK** | Score ≥ 60, or VT ≥ 5 engines, or AbuseIPDB ≥ 75%, or any MB/URLhaus hit, or 2+ independent malicious sources |
+| 🟡 **SUSPICIOUS / INVESTIGATE** | Score ≥ 25, or any VT detection, or AbuseIPDB ≥ 25%, or OTX 1–4 pulses, or OTX 5+ pulses (single source) |
+| 🟢 **CLEAN / ALLOW** | At least 1 source checked, no threat signals found |
+| ⚪ **UNKNOWN / MONITOR** | No key-based sources ran and no free-source hit |
+
+### Confidence
+
+| Level | Condition |
+|-------|-----------|
+| **High** | 2+ malicious sources, or 3+ sources checked |
+| **Medium** | 2+ sources checked, or 1 malicious source confirmed |
+| **Low** | 0–1 source checked with no malicious signals |
 
 ---
 

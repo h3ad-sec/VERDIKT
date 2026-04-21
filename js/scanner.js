@@ -141,7 +141,6 @@ async function runParallelScan(entry) {
   const [vt, ab, otx, mb, uh, shodan] = await Promise.all([vtP, abP, otxP, mbP, uhP, shP]);
   entry.vt=vt; entry.ab=ab; entry.otx=otx; entry.mb=mb; entry.uh=uh; entry.shodan=shodan;
 
-  // Extract first/last seen across all sources
   entry.firstSeen = extractFirstSeen(mb, uh);
   entry.lastSeen  = extractLastSeen(vt, ab, mb, uh);
 }
@@ -161,6 +160,16 @@ function extractLastSeen(vt, ab, mb, uh) {
   if (mb?.lastSeen) dates.push(mb.lastSeen);
   if (uh?.lastSeen) dates.push(uh.lastSeen);
   return dates.sort().reverse()[0] || null;
+}
+
+function maxScoreForType(type) {
+  let max = 15;
+  if (type !== 'email') max += 40;
+  if (type === 'ip' || type === 'ipv6') max += 30;
+  if (type === 'hash_md5' || type === 'hash_sha1' || type === 'hash_sha256') max += 10;
+  if (type === 'url' || type === 'hash_sha256') max += 10;
+  if (type === 'ip') max += 8;
+  return max;
 }
 
 function scoreEntry(entry) {
@@ -202,16 +211,15 @@ function scoreEntry(entry) {
 
   const mbHit = mb && !mb.skipped && !mb.error && !mb.notFound;
   const uhHit = uh && !uh.skipped && !uh.error && !uh.notFound;
-  if (mbHit || uhHit) {
+  if (mbHit) {
     sourcesChecked++; score += 10; sourcesMalicious++;
-    if (mbHit) {
-      indicators.push('MalwareBazaar: found');
-      reasons.push(`Listed in MalwareBazaar${mb.signature?` as ${mb.signature}`:mb.fileType?` (${mb.fileType})`:''}`);
-    }
-    if (uhHit) {
-      indicators.push('URLhaus: found');
-      reasons.push(`Listed in URLhaus${uh.threat?` (${uh.threat})`:uh.urlStatus?` — ${uh.urlStatus}`:''}`);
-    }
+    indicators.push('MalwareBazaar: found');
+    reasons.push(`Listed in MalwareBazaar${mb.signature?` as ${mb.signature}`:mb.fileType?` (${mb.fileType})`:''}`);
+  }
+  if (uhHit) {
+    sourcesChecked++; score += 10; sourcesMalicious++;
+    indicators.push('URLhaus: found');
+    reasons.push(`Listed in URLhaus${uh.threat?` (${uh.threat})`:uh.urlStatus?` — ${uh.urlStatus}`:''}`);
   }
 
   if (shodan && !shodan.skipped && !shodan.error) {
@@ -226,7 +234,8 @@ function scoreEntry(entry) {
     }
   }
 
-  score = Math.min(100, Math.round(score));
+  const maxPossible = maxScoreForType(entry.ioc.type);
+  score = Math.min(100, Math.round((score / maxPossible) * 100));
 
   const abScore=(ab&&!ab.skipped&&!ab.error)?(ab.score||0):0;
   const vtMal=(vt&&!vt.skipped&&!vt.error)?(vt.malicious||0):0;
@@ -234,9 +243,8 @@ function scoreEntry(entry) {
 
   let verdict, action;
   if (abScore>=75||vtMal>=5||anyFreeHit||score>=60||sourcesMalicious>=2) { verdict='malicious'; action='block'; }
-  else if (score>=25||sourcesSuspicious>=1||vtMal>=1||abScore>=25)  { verdict='suspicious'; action='investigate'; }
-  else if (sourcesChecked>=2) { verdict='clean'; action='allow'; }
-  else if (sourcesChecked===1) { verdict='clean'; action='allow'; }
+  else if (score>=25||sourcesSuspicious>=1||sourcesMalicious>=1||vtMal>=1||abScore>=25)  { verdict='suspicious'; action='investigate'; }
+  else if (sourcesChecked>=1) { verdict='clean'; action='allow'; }
   else { verdict='unknown'; action='monitor'; }
 
   const keySourcesRan = (vt&&!vt.skipped&&!vt.error) || (ab&&!ab.skipped&&!ab.error) || (otx&&!otx.skipped&&!otx.error);
