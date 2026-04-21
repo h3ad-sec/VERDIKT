@@ -295,7 +295,7 @@ function buildScoreBreakdown(entry) {
     const p = otx.pulseCount || 0;
     const pts = Math.min(15, Math.round((p / 10) * 15));
     rawTotal += pts;
-    addRow('OTX', 'var(--otx)', pts, 15, `${p} pulse${p !== 1 ? 's' : ''}`, 'ok');
+    addRow('OTX', 'var(--otx)', pts, 15, `${p} pulse${p !== 1 ? 's' : ''} — score only, does not affect verdict directly`, 'ok');
   }
 
   // abuse.ch — MB + URLhaus share 10pt pool

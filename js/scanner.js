@@ -203,8 +203,7 @@ function scoreEntry(entry) {
     score += Math.min(15, Math.round((p/10)*15));
     if (p>0) {
       indicators.push(`OTX: ${p} pulse${p>1?'s':''}`);
-      if (p>=5) { sourcesMalicious++; reasons.push(`Listed in ${p} OTX threat pulses`); }
-      else { sourcesSuspicious++; reasons.push(`Found in ${p} OTX threat feed${p>1?'s':''}`); }
+      reasons.push(p>=5 ? `Listed in ${p} OTX threat pulses` : `Found in ${p} OTX threat feed${p>1?'s':''}`);
     }
   }
 
@@ -243,7 +242,7 @@ function scoreEntry(entry) {
 
   let verdict, action;
   if (abScore>=75||vtMal>=5||anyFreeHit||score>=60||sourcesMalicious>=2) { verdict='malicious'; action='block'; }
-  else if (score>=25||sourcesSuspicious>=1||sourcesMalicious>=1||vtMal>=1||abScore>=25)  { verdict='suspicious'; action='investigate'; }
+  else if (score>=30||sourcesSuspicious>=1||vtMal>=1||abScore>=25) { verdict='suspicious'; action='investigate'; }
   else if (sourcesChecked>=2) { verdict='benign'; action='allow'; }
   else { verdict='unknown'; action='monitor'; }
 
