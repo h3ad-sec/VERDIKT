@@ -23,8 +23,8 @@ async function detectMode() {
         document.getElementById('server-mode-badge').style.display = '';
         const rn = document.getElementById('rate-note-text');
         if (rn) rn.textContent = status.vt_paid ? 'Server mode · VT Paid — fully parallel' : 'Server mode · VT Free — token bucket (4 req/min)';
-        const active = ['vt','abuseipdb','otx'].filter(k => status[k]).length;
-        showToast(`Server mode — ${active}/3 keys configured`, active > 0 ? 'success' : 'warning');
+        const active = ['vt','abuseipdb','otx','abusech'].filter(k => status[k]).length;
+        showToast(`Server mode — ${active}/4 keys configured`, active > 0 ? 'success' : 'warning');
         return;
       }
     }
@@ -34,7 +34,7 @@ async function detectMode() {
   setMode('input');
   loadSavedKeys();
   updateStatusDots();
-  ['vt-key','ab-key','otx-key'].forEach(id => {
+  ['vt-key','ab-key','otx-key','abch-key'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', updateStatusDots);
   });

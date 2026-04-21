@@ -64,9 +64,10 @@ const API = {
         resp = await fetch(`/api/malwarebazaar?hash=${encodeURIComponent(ioc.value.toLowerCase())}`, { signal });
       } else {
         const body = new URLSearchParams({ query:'get_info', hash: ioc.value.toLowerCase() });
-        resp = await fetch('https://mb-api.abuse.ch/api/v1/', {
-          method:'POST', body, headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, signal
-        });
+        const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
+        const abchKey = getKey('abch');
+        if (abchKey) headers['Auth-Key'] = abchKey;
+        resp = await fetch('https://mb-api.abuse.ch/api/v1/', { method:'POST', body, headers, signal });
       }
       if (!resp.ok) return { source:'malwarebazaar', error:`HTTP ${resp.status}` };
       return parseMalwareBazaarResponse(await resp.json());
@@ -91,9 +92,10 @@ const API = {
       } else {
         const endpoint = isUrl ? 'https://urlhaus-api.abuse.ch/v1/url/' : 'https://urlhaus-api.abuse.ch/v1/payload/';
         const body = new URLSearchParams(isUrl ? { url: ioc.value } : { sha256_hash: ioc.value.toLowerCase() });
-        resp = await fetch(endpoint, {
-          method:'POST', body, headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, signal
-        });
+        const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
+        const abchKey = getKey('abch');
+        if (abchKey) headers['Auth-Key'] = abchKey;
+        resp = await fetch(endpoint, { method:'POST', body, headers, signal });
       }
       if (!resp.ok) return { source:'urlhaus', error:`HTTP ${resp.status}` };
       return parseURLhausResponse(await resp.json(), isUrl ? 'url' : 'hash');
