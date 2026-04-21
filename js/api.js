@@ -111,7 +111,7 @@ const API = {
     if (ioc.isPrivate)     return { source:'shodan', skipped:true, reason:'Private IP' };
     try {
       const resp = await fetch(`https://internetdb.shodan.io/${ioc.value}`, { signal });
-      if (resp.status === 404) return { source:'shodan', verdict:'clean', score:0, scoreLabel:'Not indexed', ports:[], cves:[], tags:[], raw:null };
+      if (resp.status === 404) return { source:'shodan', verdict:'benign', score:0, scoreLabel:'Not indexed', ports:[], cves:[], tags:[], raw:null };
       if (!resp.ok) return { source:'shodan', error:`HTTP ${resp.status}` };
       return parseShodanResponse(await resp.json());
     } catch(e) { return { source:'shodan', error: fmtErr(e) }; }
@@ -125,7 +125,7 @@ function parseVTResponse(data, type) {
   const mal = stats.malicious || 0, sus = stats.suspicious || 0;
   const harm = stats.harmless || 0, undet = stats.undetected || 0;
   const total = mal + sus + harm + undet;
-  const verdict = mal > 0 ? 'malicious' : sus > 0 ? 'suspicious' : 'clean';
+  const verdict = mal > 0 ? 'malicious' : sus > 0 ? 'suspicious' : 'benign';
   const r = {
     source:'virustotal', verdict, malicious:mal, suspicious:sus,
     harmless:harm, undetected:undet, total,
@@ -148,7 +148,7 @@ function parseVTResponse(data, type) {
 function parseAbuseIPDBResponse(data) {
   const d = data?.data || {};
   const score = d.abuseConfidenceScore || 0;
-  const verdict = score >= 75 ? 'malicious' : score >= 25 ? 'suspicious' : 'clean';
+  const verdict = score >= 75 ? 'malicious' : score >= 25 ? 'suspicious' : 'benign';
   return {
     source:'abuseipdb', verdict, score, scoreLabel:`${score}%`,
     totalReports: d.totalReports || 0, numDistinctUsers: d.numDistinctUsers || 0,
@@ -161,7 +161,7 @@ function parseAbuseIPDBResponse(data) {
 function parseOTXResponse(data, type) {
   const pulseCount = data?.pulse_info?.count || 0;
   const pulses = data?.pulse_info?.pulses || [];
-  const verdict = pulseCount >= 5 ? 'malicious' : pulseCount >= 1 ? 'suspicious' : 'clean';
+  const verdict = pulseCount >= 5 ? 'malicious' : pulseCount >= 1 ? 'suspicious' : 'benign';
   const malwareFamilies=[], tags=[], adversaries=[];
   for (const p of pulses.slice(0,5)) {
     if (p.malware_families) malwareFamilies.push(...p.malware_families.map(f=>f.display_name||f));
@@ -182,7 +182,7 @@ function parseOTXResponse(data, type) {
 
 function parseMalwareBazaarResponse(data) {
   if (data?.query_status === 'hash_not_found' || !data?.data?.length)
-    return { source:'malwarebazaar', verdict:'clean', notFound:true, link:'https://bazaar.abuse.ch/', raw:data };
+    return { source:'malwarebazaar', verdict:'benign', notFound:true, link:'https://bazaar.abuse.ch/', raw:data };
   if (data?.query_status !== 'ok') return { source:'malwarebazaar', error:data?.query_status||'Error', raw:data };
   const d = data.data[0];
   return {
@@ -198,7 +198,7 @@ function parseMalwareBazaarResponse(data) {
 
 function parseURLhausResponse(data, mode) {
   const notFound = ['no_results','hash_not_found','url_not_found'].includes(data?.query_status);
-  if (notFound) return { source:'urlhaus', verdict:'clean', notFound:true, link:'https://urlhaus.abuse.ch/', raw:data };
+  if (notFound) return { source:'urlhaus', verdict:'benign', notFound:true, link:'https://urlhaus.abuse.ch/', raw:data };
   if (data?.query_status !== 'ok') return { source:'urlhaus', error:data?.query_status||'Error', raw:data };
   if (mode === 'url') {
     return {
@@ -220,7 +220,7 @@ function parseURLhausResponse(data, mode) {
 function parseShodanResponse(data) {
   const cves = data?.vulns || [], ports = data?.ports || [], tags = data?.tags || [];
   const cveArr = Array.isArray(cves) ? cves : Object.keys(cves);
-  let verdict = 'clean';
+  let verdict = 'benign';
   if (cveArr.length > 0) verdict = 'suspicious';
   if (tags.includes('honeypot')||tags.includes('malware')||tags.includes('tor')) verdict = 'malicious';
   return {

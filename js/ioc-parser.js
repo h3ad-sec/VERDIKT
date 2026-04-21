@@ -1,7 +1,7 @@
 const IOCPatterns = {
   ipv4:   /^(\d{1,3}\.){3}\d{1,3}$/,
   ipv6:   /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}(:[0-9a-fA-F]{0,4})?$/,
-  url:    /^https?:\/\/([\w\-\.]+)(:\d+)?(\/[^\s]*)?$/i,
+  url:    /^https?:\/\/([\w\-\.]+\.[\w\-]+)(:\d+)?(\/[^\s]*)?$/i,
   email:  /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/,
   md5:    /^[a-fA-F0-9]{32}$/,
   sha1:   /^[a-fA-F0-9]{40}$/,
@@ -16,16 +16,20 @@ const PRIVATE_RANGES = [
 ];
 
 const LOG_EXTRACT = {
-  // URLs before IP to avoid partial matches
-  url:    /https?:\/\/(?:[\[\(]?\.\]?\)?)?[\w\-\.]+(?::\d+)?(?:\/[^\s"',;>)\]]*)?/gi,
+  // URLs before IP to avoid partial matches — also catches defanged hxxp:// and [.] variants
+  url:    /(?:https?|hxxps?):\/\/[\w\-]+(?:(?:\[\.\]|\(\.\)|\.)+[\w\-]+)+(?::\d+)?(?:\/[^\s"',;>)\]]*)?/gi,
+  // IPv6 before IPv4 to avoid partial colon matches
+  ipv6:   /[0-9a-fA-F]{0,4}(?::[0-9a-fA-F]{0,4}){2,7}/g,
   // IPv4 including defanged forms: 1[.]2[.]3[.]4  1(.)2(.)3(.)4
   ipv4:   /\b(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})[\[\(]?\.[\]\)]?(\d{1,3})\b/g,
+  // Hashes longest-first to prevent sha256 matching inside sha512
+  sha512: /\b[a-fA-F0-9]{128}\b/g,
   sha256: /\b[a-fA-F0-9]{64}\b/g,
   sha1:   /\b[a-fA-F0-9]{40}\b/g,
   md5:    /\b[a-fA-F0-9]{32}\b/g,
   email:  /\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/g,
   // Domain last — conservative to avoid false positives on email/URL substrings
-  domain: /\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+(?:com|net|org|io|gov|edu|mil|int|co|uk|de|fr|ru|cn|jp|br|au|nl|se|no|fi|dk|pl|it|es|pt|be|ch|at|nz|za|in|sg|hk|tw|kr|mx|ar|cl|ph|th|id|vn|pk|bd|ng|ke|gh|tz|ug|zw|biz|info|mobi|name|museum|coop|aero|pro|tel|cat|xxx|travel|jobs|app|dev|cloud|tech|online|site|web|store|shop|blog|news|media|digital|ai)\b/gi,
+  domain: /\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+(?:com|net|org|io|gov|edu|mil|int|co|uk|de|fr|ru|cn|jp|br|au|nl|se|no|fi|dk|pl|it|es|pt|be|ch|at|nz|za|in|sg|hk|tw|kr|mx|ar|cl|ph|th|id|vn|pk|bd|ng|ke|gh|tz|ug|zw|us|ca|eu|ua|biz|info|mobi|name|museum|coop|aero|pro|tel|cat|xxx|travel|jobs|app|dev|cloud|tech|online|site|web|store|shop|blog|news|media|digital|ai|xyz|top|me|tv|cc|pw|ly|to|gg|im|live|space|click|link|fun|global|zone|network|services|solutions|group|team|world|life)\b/gi,
 };
 
 const FIELD_LABELS = [
@@ -86,8 +90,18 @@ function extractFromLog(text) {
   let m;
   LOG_EXTRACT.url.lastIndex = 0;
   while ((m = LOG_EXTRACT.url.exec(text)) !== null) {
-    const raw = m[0].replace(/[\[\(]?\.\]?\)?/g, '.').replace(/hxxp/gi, 'http').replace(/\[:\]/g, ':');
+    const raw = m[0].replace(/\[\.\]|\(\.\)/g, '.').replace(/hxxps?/gi, s => s.replace(/xx/i, 'tt')).replace(/\[:\]/g, ':');
     if (!found.has(raw.toLowerCase())) { found.add(raw.toLowerCase()); results.push(raw); }
+  }
+
+  LOG_EXTRACT.ipv6.lastIndex = 0;
+  while ((m = LOG_EXTRACT.ipv6.exec(text)) !== null) {
+    const addr = m[0];
+    // Require a hex letter OR 4+ colons to exclude timestamps like 10:23:44
+    if ((/[a-fA-F]/.test(addr) || (addr.match(/:/g)||[]).length >= 4) && detectIOCType(addr) === 'ipv6' && !found.has(addr.toLowerCase())) {
+      found.add(addr.toLowerCase());
+      results.push(addr);
+    }
   }
 
   LOG_EXTRACT.ipv4.lastIndex = 0;
@@ -97,7 +111,7 @@ function extractFromLog(text) {
   }
 
   // Hashes (longest first to avoid subset matches)
-  for (const key of ['sha256','sha1','md5']) {
+  for (const key of ['sha512','sha256','sha1','md5']) {
     LOG_EXTRACT[key].lastIndex = 0;
     while ((m = LOG_EXTRACT[key].exec(text)) !== null) {
       const h = m[0].toLowerCase();
@@ -127,6 +141,8 @@ function extractFromLog(text) {
 function defang(token) {
   return token
     .replace(/hxxps?/gi, m => m.replace(/xx/i, 'tt'))
+    .replace(/\[:\/\/\]/g, '://')
+    .replace(/\(:\/\/\)/g, '://')
     .replace(/\[\.\]/g, '.')
     .replace(/\(\.\)/g, '.')
     .replace(/\[:\]/g, ':')
@@ -150,7 +166,7 @@ function parseIOCs(raw) {
 
   const tokens = textToProcess
     .split(/[\n\r,;\t]+/)
-    .flatMap(line => line.split(/\s{2,}/))   // also split on 2+ spaces
+    .flatMap(line => line.split(/\s+/))
     .map(t => t.trim())
     .filter(t => t.length >= 4 && !t.startsWith('#') && !t.startsWith('//') && !t.startsWith(';'));
 

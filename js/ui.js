@@ -73,7 +73,7 @@ function buildVerdictCell(verdict, action, score, confidence, done) {
   const vMap = {
     malicious: { icon:'🔴', label:'MALICIOUS',  cls:'verdict-malicious' },
     suspicious:{ icon:'🟡', label:'SUSPICIOUS', cls:'verdict-suspicious' },
-    clean:     { icon:'🟢', label:'CLEAN',      cls:'verdict-clean' },
+    benign:    { icon:'🟢', label:'BENIGN',     cls:'verdict-benign' },
     unknown:   { icon:'⚪', label:'UNKNOWN',    cls:'verdict-unknown' },
     error:     { icon:'⚫', label:'ERROR',      cls:'verdict-error' },
   };
@@ -180,7 +180,7 @@ function renderDecisionPanel(results) {
 
 function renderSummary(results) {
   const done=results.filter(r=>r.done);
-  const cnt={malicious:0,suspicious:0,clean:0,unknown:0};
+  const cnt={malicious:0,suspicious:0,benign:0,unknown:0};
   const scores=[];
   done.forEach(r=>{ if(cnt[r.verdict]!==undefined)cnt[r.verdict]++; if(r.score!=null)scores.push(r.score); });
   const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
@@ -189,7 +189,7 @@ function renderSummary(results) {
     <div class="summary-card sc-total"><div class="sc-icon">📊</div><div><div class="summary-num">${results.length}</div><div class="summary-lbl">TOTAL</div></div></div>
     <div class="summary-card sc-malicious"><div class="sc-icon">🔴</div><div><div class="summary-num">${cnt.malicious}</div><div class="summary-lbl">MALICIOUS</div></div></div>
     <div class="summary-card sc-suspicious"><div class="sc-icon">🟡</div><div><div class="summary-num">${cnt.suspicious}</div><div class="summary-lbl">SUSPICIOUS</div></div></div>
-    <div class="summary-card sc-clean"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.clean}</div><div class="summary-lbl">CLEAN</div></div></div>
+    <div class="summary-card sc-benign"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.benign}</div><div class="summary-lbl">BENIGN</div></div></div>
     <div class="summary-card sc-unknown"><div class="sc-icon">⚪</div><div><div class="summary-num">${cnt.unknown}</div><div class="summary-lbl">UNKNOWN</div></div></div>
     <div class="summary-card sc-score"><div class="sc-icon">⚡</div><div><div class="summary-num">${avg!=null?avg:'—'}</div><div class="summary-lbl">AVG RISK</div></div></div>`;
 
@@ -226,11 +226,157 @@ function openModal(i) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function toggleScoreBreakdown(btn) {
+  const section = document.querySelector('#modal-body .score-bd-section');
+  if (!section) return;
+  const open = section.classList.toggle('sbd-open');
+  btn.textContent = open ? '▾ SCORING LOGIC' : '▸ SCORING LOGIC';
+  btn.setAttribute('aria-expanded', open);
+}
+
+function computeMaxScoreForType(type) {
+  let max = 15;
+  if (type !== 'email') max += 40;
+  if (type === 'ip' || type === 'ipv6') max += 30;
+  if (['hash_md5','hash_sha1','hash_sha256','url'].includes(type)) max += 10;
+  if (type === 'ip') max += 8;
+  return max;
+}
+
+function buildScoreBreakdown(entry) {
+  const { vt, ab, otx, mb, uh, shodan, ioc, score } = entry;
+  const type = ioc.type;
+  const rows = [];
+  let rawTotal = 0;
+
+  const addRow = (src, color, raw, cap, note, status) => rows.push({ src, color, raw, cap, note, status });
+
+  // VirusTotal
+  if (type === 'email') {
+    addRow('VirusTotal', 'var(--vt)', null, 40, 'N/A for email', 'na');
+  } else if (!vt || vt.skipped) {
+    addRow('VirusTotal', 'var(--vt)', null, 40, vt?.reason || 'Skipped', 'skip');
+  } else if (vt.error) {
+    addRow('VirusTotal', 'var(--vt)', null, 40, vt.error, 'error');
+  } else {
+    const mal = vt.malicious || 0, tot = vt.total || 0;
+    if (tot === 0) {
+      addRow('VirusTotal', 'var(--vt)', 0, 40, 'No engine data', 'ok');
+    } else {
+      const pts = Math.round((mal / tot) * 40);
+      const rep = vt.reputation != null && vt.reputation < -10 ? Math.min(10, Math.abs(vt.reputation) / 5) : 0;
+      rawTotal += pts + rep;
+      const repNote = rep > 0 ? ` + rep bonus (+${rep.toFixed(0)}pts)` : '';
+      addRow('VirusTotal', 'var(--vt)', pts + rep, 40, `${mal}/${tot} engines${repNote}`, 'ok');
+    }
+  }
+
+  // AbuseIPDB
+  const abApplies = type === 'ip' || type === 'ipv6';
+  if (!abApplies) {
+    addRow('AbuseIPDB', 'var(--ab)', null, 30, 'IPv4/IPv6 only', 'na');
+  } else if (!ab || ab.skipped) {
+    addRow('AbuseIPDB', 'var(--ab)', null, 30, ab?.reason || 'Skipped', 'skip');
+  } else if (ab.error) {
+    addRow('AbuseIPDB', 'var(--ab)', null, 30, ab.error, 'error');
+  } else {
+    const s = ab.score || 0;
+    const pts = Math.round((s / 100) * 30);
+    rawTotal += pts;
+    addRow('AbuseIPDB', 'var(--ab)', pts, 30, `${s}% abuse score`, 'ok');
+  }
+
+  // OTX
+  if (!otx || otx.skipped) {
+    addRow('OTX', 'var(--otx)', null, 15, otx?.reason || 'Skipped', 'skip');
+  } else if (otx.error) {
+    addRow('OTX', 'var(--otx)', null, 15, otx.error, 'error');
+  } else {
+    const p = otx.pulseCount || 0;
+    const pts = Math.min(15, Math.round((p / 10) * 15));
+    rawTotal += pts;
+    addRow('OTX', 'var(--otx)', pts, 15, `${p} pulse${p !== 1 ? 's' : ''}`, 'ok');
+  }
+
+  // abuse.ch — MB + URLhaus share 10pt pool
+  const mbApplies = ['hash_md5','hash_sha1','hash_sha256'].includes(type);
+  const uhApplies = type === 'url' || type === 'hash_sha256';
+  if (mbApplies || uhApplies) {
+    const mbHit = mb && !mb.skipped && !mb.error && !mb.notFound;
+    const uhHit = uh && !uh.skipped && !uh.error && !uh.notFound;
+    if (mbHit || uhHit) {
+      rawTotal += 10;
+      const hits = [mbHit && 'MB', uhHit && 'URLhaus'].filter(Boolean).join(' + ');
+      addRow('abuse.ch', 'var(--mb)', 10, 10, `${hits} — confirmed malicious`, 'ok');
+    } else {
+      const hasError = (mbApplies && mb?.error) || (uhApplies && uh?.error);
+      const parts = [];
+      if (mbApplies) parts.push(`MB: ${mb?.error || (mb?.notFound ? 'not found' : mb?.reason || 'skip')}`);
+      if (uhApplies) parts.push(`URLhaus: ${uh?.error || (uh?.notFound ? 'not found' : uh?.reason || 'skip')}`);
+      addRow('abuse.ch', 'var(--mb)', 0, 10, parts.join(' · '), hasError ? 'error' : 'ok');
+    }
+  }
+
+  // Shodan
+  if (type !== 'ip') {
+    addRow('Shodan', 'var(--sh)', null, 8, 'IPv4 only', 'na');
+  } else if (!shodan || shodan.skipped) {
+    addRow('Shodan', 'var(--sh)', null, 8, shodan?.reason || 'Skipped', 'skip');
+  } else if (shodan.error) {
+    addRow('Shodan', 'var(--sh)', null, 8, shodan.error, 'error');
+  } else if (shodan.raw === null) {
+    addRow('Shodan', 'var(--sh)', 0, 8, 'Not indexed', 'ok');
+  } else {
+    const cves = shodan.cves?.length || 0;
+    const threat = shodan.tags?.find(t => ['tor','honeypot','malware'].includes(t));
+    const pts = Math.min(5, cves) + (threat ? 3 : 0);
+    rawTotal += pts;
+    const parts = [];
+    if (cves) parts.push(`${cves} CVE${cves > 1 ? 's' : ''} (+${Math.min(5,cves)}pts)`);
+    if (threat) parts.push(`${threat} tag (+3pts)`);
+    if (shodan.ports?.length) parts.push(`${shodan.ports.length} open ports`);
+    addRow('Shodan', 'var(--sh)', pts, 8, parts.join(' · ') || 'No threats', 'ok');
+  }
+
+  const maxPossible = computeMaxScoreForType(type);
+  const normalized = Math.min(100, Math.round((rawTotal / maxPossible) * 100));
+
+  const rowsHtml = rows.map(r => {
+    const ptsDisplay = r.raw !== null ? r.raw : '—';
+    const barPct = r.raw !== null && r.cap > 0 ? Math.round((r.raw / r.cap) * 100) : 0;
+    const barColor = r.raw >= r.cap * 0.6 ? 'var(--red)' : r.raw > 0 ? 'var(--yellow)' : 'var(--accent)';
+    const statusCls = r.status === 'na' ? 'sbd-na' : r.status === 'skip' ? 'sbd-skip' : r.status === 'error' ? 'sbd-error' : '';
+    return `<tr class="sbd-row ${statusCls}">
+      <td class="sbd-src" style="color:${r.color}">${r.src}</td>
+      <td class="sbd-pts">${ptsDisplay}</td>
+      <td class="sbd-cap">/${r.cap}</td>
+      <td class="sbd-bar-cell">${r.raw !== null ? `<div class="sbd-bar"><div class="sbd-bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>` : ''}</td>
+      <td class="sbd-note">${escapeHtml(r.note)}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="score-bd-section">
+    <div class="sbd-label">SCORE BREAKDOWN — ${escapeHtml(ioc.label)} · max ${maxPossible} raw pts</div>
+    <table class="sbd-table">
+      <thead><tr><th>Source</th><th>Pts</th><th></th><th></th><th>Signal</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+      <tfoot>
+        <tr class="sbd-total">
+          <td>Raw total</td>
+          <td>${rawTotal}</td>
+          <td>/${maxPossible}</td>
+          <td></td>
+          <td>${rawTotal}/${maxPossible} × 100 = <strong>${normalized}</strong>/100</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>`;
+}
 
 function buildModalContent(entry) {
   const { ioc, verdict, action, score, confidence, reasons, indicators, firstSeen, lastSeen, vt, ab, otx, mb, uh, shodan } = entry;
 
-  const vMap = { malicious:{icon:'🔴',cls:'verdict-malicious'}, suspicious:{icon:'🟡',cls:'verdict-suspicious'}, clean:{icon:'🟢',cls:'verdict-clean'}, unknown:{icon:'⚪',cls:'verdict-unknown'} };
+  const vMap = { malicious:{icon:'🔴',cls:'verdict-malicious'}, suspicious:{icon:'🟡',cls:'verdict-suspicious'}, benign:{icon:'🟢',cls:'verdict-benign'}, unknown:{icon:'⚪',cls:'verdict-unknown'} };
   const aMap = { block:{icon:'🚫',cls:'action-block'}, investigate:{icon:'🔍',cls:'action-investigate'}, allow:{icon:'✅',cls:'action-allow'}, monitor:{icon:'⏳',cls:'action-monitor'} };
   const v=vMap[verdict]||vMap.unknown, a=aMap[action]||aMap.monitor;
 
@@ -255,6 +401,7 @@ function buildModalContent(entry) {
           <div class="mvc-score-num">${score!=null?score:'—'}</div>
           <div class="mvc-score-bar"><div class="mvc-score-fill" style="width:${score||0}%;background:${scoreColor(score)}"></div></div>
           <div class="mvc-score-label">RISK SCORE / 100</div>
+          <button class="sbd-toggle-btn" onclick="toggleScoreBreakdown(this)" aria-expanded="false">▸ SCORING LOGIC</button>
         </div>
       </div>
       <div class="mvc-right">
@@ -282,7 +429,8 @@ function buildModalContent(entry) {
       </div>
     </div>
 
-    <div class="modal-sources-divider"></div>`;
+    <div class="modal-sources-divider"></div>
+    ${buildScoreBreakdown(entry)}`;
 
   if (vt)     html += modalSource('VIRUSTOTAL',       'var(--vt)',  vt,  vtRows(vt),     vt.tags,  vt.link,    '↗ VT');
   if (ab)     html += modalSource('ABUSEIPDB',        'var(--ab)',  ab,  abRows(ab),     [],        ab.link,    '↗ AbuseIPDB');
@@ -387,7 +535,7 @@ function shRows(r) {
   return s;
 }
 function kv(k,v,cls='') { return `<div class="modal-k">${escapeHtml(k)}</div><div class="modal-v ${cls}">${escapeHtml(String(v??'—'))}</div>`; }
-function vc(v) { return {malicious:'val-malicious',suspicious:'val-suspicious',clean:'val-clean'}[v]||''; }
+function vc(v) { return {malicious:'val-malicious',suspicious:'val-suspicious',benign:'val-benign'}[v]||''; }
 
 function renderBreakdown(iocs) {
   if (!iocs.length) {

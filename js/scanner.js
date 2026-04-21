@@ -166,8 +166,7 @@ function maxScoreForType(type) {
   let max = 15;
   if (type !== 'email') max += 40;
   if (type === 'ip' || type === 'ipv6') max += 30;
-  if (type === 'hash_md5' || type === 'hash_sha1' || type === 'hash_sha256') max += 10;
-  if (type === 'url' || type === 'hash_sha256') max += 10;
+  if (type === 'hash_md5' || type === 'hash_sha1' || type === 'hash_sha256' || type === 'url') max += 10;
   if (type === 'ip') max += 8;
   return max;
 }
@@ -211,15 +210,16 @@ function scoreEntry(entry) {
 
   const mbHit = mb && !mb.skipped && !mb.error && !mb.notFound;
   const uhHit = uh && !uh.skipped && !uh.error && !uh.notFound;
-  if (mbHit) {
+  if (mbHit || uhHit) {
     sourcesChecked++; score += 10; sourcesMalicious++;
-    indicators.push('MalwareBazaar: found');
-    reasons.push(`Listed in MalwareBazaar${mb.signature?` as ${mb.signature}`:mb.fileType?` (${mb.fileType})`:''}`);
-  }
-  if (uhHit) {
-    sourcesChecked++; score += 10; sourcesMalicious++;
-    indicators.push('URLhaus: found');
-    reasons.push(`Listed in URLhaus${uh.threat?` (${uh.threat})`:uh.urlStatus?` — ${uh.urlStatus}`:''}`);
+    if (mbHit) {
+      indicators.push('MalwareBazaar: found');
+      reasons.push(`Listed in MalwareBazaar${mb.signature?` as ${mb.signature}`:mb.fileType?` (${mb.fileType})`:''}`);
+    }
+    if (uhHit) {
+      indicators.push('URLhaus: found');
+      reasons.push(`Listed in URLhaus${uh.threat?` (${uh.threat})`:uh.urlStatus?` — ${uh.urlStatus}`:''}`);
+    }
   }
 
   if (shodan && !shodan.skipped && !shodan.error) {
@@ -244,12 +244,12 @@ function scoreEntry(entry) {
   let verdict, action;
   if (abScore>=75||vtMal>=5||anyFreeHit||score>=60||sourcesMalicious>=2) { verdict='malicious'; action='block'; }
   else if (score>=25||sourcesSuspicious>=1||sourcesMalicious>=1||vtMal>=1||abScore>=25)  { verdict='suspicious'; action='investigate'; }
-  else if (sourcesChecked>=1) { verdict='clean'; action='allow'; }
+  else if (sourcesChecked>=2) { verdict='benign'; action='allow'; }
   else { verdict='unknown'; action='monitor'; }
 
   const keySourcesRan = (vt&&!vt.skipped&&!vt.error) || (ab&&!ab.skipped&&!ab.error) || (otx&&!otx.skipped&&!otx.error);
   const freeSourceHit = anyFreeHit;
-  if (!keySourcesRan && !freeSourceHit && verdict==='clean') { verdict='unknown'; action='monitor'; }
+  if (!keySourcesRan && !freeSourceHit && verdict==='benign') { verdict='unknown'; action='monitor'; }
 
   let confidence;
   if (sourcesChecked===0) confidence='low';
@@ -257,10 +257,18 @@ function scoreEntry(entry) {
   else if (sourcesChecked>=2||sourcesMalicious>=1) confidence='medium';
   else confidence='low';
 
+  const keySourceErrored = !!(vt?.error || ab?.error || otx?.error);
+  const noKeyConfigured = [vt,ab,otx].every(s => !s || (s.skipped && s.reason==='No API key'));
+
   const finalReasons=reasons.slice(0,2);
   if (!finalReasons.length) {
     if (!keySourcesRan && !freeSourceHit) {
-      finalReasons.push('No API keys configured — add VT, AbuseIPDB or OTX keys to get verdicts');
+      if (keySourceErrored)
+        finalReasons.push('Sources timed out or errored — results may be incomplete');
+      else if (noKeyConfigured)
+        finalReasons.push('No API keys configured — add VT, AbuseIPDB or OTX keys to get verdicts');
+      else
+        finalReasons.push('No sources returned usable data');
     } else if (sourcesChecked>0) {
       finalReasons.push('No threat signals detected across checked sources');
     } else {

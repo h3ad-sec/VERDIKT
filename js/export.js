@@ -40,7 +40,7 @@ function exportXLSX(results, fn) {
   XLSX.utils.book_append_sheet(wb, wsData, 'IOC Results');
 
   const done = results.filter(r=>r.done);
-  const cnt={malicious:0,suspicious:0,clean:0,unknown:0};
+  const cnt={malicious:0,suspicious:0,benign:0,unknown:0};
   const actionCnt={block:0,investigate:0,allow:0,monitor:0};
   const scores=[];
   done.forEach(r=>{
@@ -64,7 +64,7 @@ function exportXLSX(results, fn) {
     ['━━ VERDICT BREAKDOWN ━━'],
     ['🔴 Malicious', cnt.malicious],
     ['🟡 Suspicious', cnt.suspicious],
-    ['🟢 Clean', cnt.clean],
+    ['🟢 Benign', cnt.benign],
     ['⚪ Unknown', cnt.unknown],
     [],
     ['━━ ACTION SUMMARY ━━'],

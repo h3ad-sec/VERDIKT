@@ -383,12 +383,10 @@ const _t=localStorage.getItem('theme');
 if(_t==='light'){document.body.classList.add('light');document.body.classList.remove('dark');updateNavLogo('light');}
 else{document.body.classList.add('dark');document.body.classList.remove('light');updateNavLogo('dark');}
 
-/* ── VT paid badge ────────────────────────────────────────────────────────── */
 function updateVTPaidBadge(){const paid=document.getElementById('vt-paid')?.checked;const b=document.getElementById('vt-paid-badge');if(b)b.style.display=paid?'':'none';}
 
-/* ── MATRIX (identical to h3ad-sec) ──────────────────────────────────────── */
 const canvas=document.getElementById('matrix'),ctx=canvas.getContext('2d');
-const chars=['443','80','8443','3389','445','22','53','T1003','T1059','T1047','T1021','T1566','T1071','T1218','T1547','T1486','T1055','T1105','IOC','IOA','YARA','SIGMA','STIX2','TAXII','Enrichment','Correlation','Attribution','ThreatHunt','MD5','SHA1','SHA256','SHA512','Detection','Response','Containment','Triage','Indicator','Feed','Pulse','CVE','CVSS','Exploit','Payload','Analysis','Sandbox','Reputation','Blocklist','Allowlist','Firewall','EDR','XDR','SIEM','SOAR','4624','4625','4688','4672','4768','4769','IAM','AzureAD','OAuth','CloudTrail','BLOCK','INVESTIGATE','ALLOW','MONITOR','VERDIKT','MALICIOUS','SUSPICIOUS','CLEAN','UNKNOWN','VT','ABUSEIPDB','OTX','SHODAN','URLHAUS','H3AD-SEC'];
+const chars=['443','80','8443','3389','445','22','53','T1003','T1059','T1047','T1021','T1566','T1071','T1218','T1547','T1486','T1055','T1105','IOC','IOA','YARA','SIGMA','STIX2','TAXII','Enrichment','Correlation','Attribution','ThreatHunt','MD5','SHA1','SHA256','SHA512','Detection','Response','Containment','Triage','Indicator','Feed','Pulse','CVE','CVSS','Exploit','Payload','Analysis','Sandbox','Reputation','Blocklist','Allowlist','Firewall','EDR','XDR','SIEM','SOAR','4624','4625','4688','4672','4768','4769','IAM','AzureAD','OAuth','CloudTrail','BLOCK','INVESTIGATE','ALLOW','MONITOR','VERDIKT','MALICIOUS','SUSPICIOUS','BENIGN','UNKNOWN','VT','ABUSEIPDB','OTX','SHODAN','URLHAUS','H3AD-SEC'];
 let drops=[];
 function initMatrix(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drops=Array(Math.floor(window.innerWidth/18)).fill(1);}
 function drawMatrix(){const l=document.body.classList.contains('light');ctx.fillStyle=l?'rgba(245,247,251,0.08)':'rgba(0,0,0,0.12)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=l?'#0077ff':'#00ff9f';ctx.font='12px monospace';for(let i=0;i<drops.length;i++){ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*18,drops[i]*18);if(drops[i]*18>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}}
