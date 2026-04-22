@@ -240,21 +240,23 @@ function scoreEntry(entry) {
   const vtMal=(vt&&!vt.skipped&&!vt.error)?(vt.malicious||0):0;
   const anyFreeHit=(mb&&!mb.skipped&&!mb.error&&!mb.notFound)||(uh&&!uh.skipped&&!uh.error&&!uh.notFound);
 
-  let verdict, action;
-  if (abScore>=75||vtMal>=5||anyFreeHit||score>=60||sourcesMalicious>=2) { verdict='malicious'; action='block'; }
-  else if (score>=30||sourcesSuspicious>=1||vtMal>=1||abScore>=25) { verdict='suspicious'; action='investigate'; }
-  else if (sourcesChecked>=2) { verdict='benign'; action='allow'; }
-  else { verdict='unknown'; action='monitor'; }
+  let verdict;
+  if (abScore>=75||vtMal>=5||anyFreeHit||score>=60||sourcesMalicious>=2) verdict='malicious';
+  else if (score>=30||sourcesSuspicious>=1||vtMal>=1||abScore>=25) verdict='suspicious';
+  else if (sourcesChecked>=2) verdict='benign';
+  else verdict='unknown';
 
   const keySourcesRan = (vt&&!vt.skipped&&!vt.error) || (ab&&!ab.skipped&&!ab.error) || (otx&&!otx.skipped&&!otx.error);
   const freeSourceHit = anyFreeHit;
-  if (!keySourcesRan && !freeSourceHit && verdict==='benign') { verdict='unknown'; action='monitor'; }
+  if (!keySourcesRan && !freeSourceHit && verdict==='benign') verdict='unknown';
 
-  let confidence;
-  if (sourcesChecked===0) confidence='informational';
-  else if (sourcesMalicious>=2||sourcesChecked>=3) confidence='high';
-  else if (sourcesChecked>=2||sourcesMalicious>=1) confidence='medium';
-  else confidence='low';
+  const verdictMeta = {
+    malicious:  { confidence:'high',          action:'block' },
+    suspicious: { confidence:'medium',        action:'investigate' },
+    benign:     { confidence:'informational', action:'allow' },
+    unknown:    { confidence:'low',           action:'monitor' },
+  };
+  const { confidence, action } = verdictMeta[verdict];
 
   const keySourceErrored = !!(vt?.error || ab?.error || otx?.error);
   const noKeyConfigured = [vt,ab,otx].every(s => !s || (s.skipped && s.reason==='No API key'));
