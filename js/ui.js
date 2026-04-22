@@ -288,14 +288,14 @@ function buildScoreBreakdown(entry) {
 
   // OTX
   if (!otx || otx.skipped) {
-    addRow('OTX', 'var(--otx)', null, 15, otx?.reason || 'Skipped', 'skip');
+    addRow('OTX', 'var(--otx)', null, 8, otx?.reason || 'Skipped', 'skip');
   } else if (otx.error) {
-    addRow('OTX', 'var(--otx)', null, 15, otx.error, 'error');
+    addRow('OTX', 'var(--otx)', null, 8, otx.error, 'error');
   } else {
     const p = otx.pulseCount || 0;
-    const pts = Math.min(15, Math.round((p / 10) * 15));
+    const pts = Math.min(8, Math.round((p / 10) * 8));
     rawTotal += pts;
-    addRow('OTX', 'var(--otx)', pts, 15, `${p} pulse${p !== 1 ? 's' : ''} — score only, does not affect verdict directly`, 'ok');
+    addRow('OTX', 'var(--otx)', pts, 8, `${p} pulse${p !== 1 ? 's' : ''} — association signal, pulses can downgrade verdict`, 'ok');
   }
 
   // abuse.ch — MB + URLhaus share 10pt pool
@@ -446,7 +446,7 @@ function scoreColor(s) {
   if (!s) return 'var(--muted)';
   if (s>=60) return 'var(--red)'; if (s>=25) return 'var(--yellow)'; return 'var(--green)';
 }
-function confColor(c) { return {high:'var(--accent)',medium:'var(--yellow)',low:'var(--muted)'}[c]||'var(--muted)'; }
+function confColor(c) { return {high:'var(--accent)',medium:'var(--yellow)',low:'var(--muted)',informational:'var(--accent2)'}[c]||'var(--muted)'; }
 
 function modalSource(title, color, r, bodyRows, tags, link, linkLabel) {
   if (!r) return '';
