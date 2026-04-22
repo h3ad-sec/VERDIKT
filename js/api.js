@@ -1,4 +1,5 @@
 let SERVER_MODE = false;
+let SERVER_BASE = '';
 
 const API = {
 
@@ -14,7 +15,7 @@ const API = {
 
     try {
       const resp = SERVER_MODE
-        ? await fetch(`/api/vt?path=${encodeURIComponent(vtPath)}`, { signal })
+        ? await fetch(`${SERVER_BASE}/api/vt?path=${encodeURIComponent(vtPath)}`, { signal })
         : await fetch(proxied(`https://www.virustotal.com${vtPath}`), { headers:{ 'x-apikey': getKey('vt') }, signal });
       if (!resp.ok) return vtHttpErr(resp.status);
       return parseVTResponse(await resp.json(), t);
@@ -25,7 +26,7 @@ const API = {
     if (ioc.baseType !== 'ip') return { source:'abuseipdb', skipped:true, reason:'IPv4/IPv6 only' };
     try {
       const resp = SERVER_MODE
-        ? await fetch(`/api/abuseipdb?ip=${encodeURIComponent(ioc.value)}`, { signal })
+        ? await fetch(`${SERVER_BASE}/api/abuseipdb?ip=${encodeURIComponent(ioc.value)}`, { signal })
         : await fetch(proxied(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ioc.value)}&maxAgeInDays=90&verbose`), {
             headers:{ 'Key': getKey('ab'), 'Accept':'application/json' }, signal
           });
@@ -47,7 +48,7 @@ const API = {
     } else return { source:'otx', skipped:true, reason:'Unsupported type' };
     try {
       const resp = SERVER_MODE
-        ? await fetch(`/api/otx?path=${encodeURIComponent(path)}`, { signal })
+        ? await fetch(`${SERVER_BASE}/api/otx?path=${encodeURIComponent(path)}`, { signal })
         : await fetch(proxied(`https://otx.alienvault.com${path}`), { headers:{ 'X-OTX-API-KEY': getKey('otx') }, signal });
       if (!resp.ok) return otxHttpErr(resp.status);
       return parseOTXResponse(await resp.json(), t);
@@ -61,7 +62,7 @@ const API = {
     try {
       let resp;
       if (SERVER_MODE) {
-        resp = await fetch(`/api/malwarebazaar?hash=${encodeURIComponent(ioc.value.toLowerCase())}`, { signal });
+        resp = await fetch(`${SERVER_BASE}/api/malwarebazaar?hash=${encodeURIComponent(ioc.value.toLowerCase())}`, { signal });
       } else {
         const body = new URLSearchParams({ query:'get_info', hash: ioc.value.toLowerCase() });
         const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
@@ -88,7 +89,7 @@ const API = {
         const param = isUrl
           ? `url=${encodeURIComponent(ioc.value)}`
           : `sha256=${encodeURIComponent(ioc.value.toLowerCase())}`;
-        resp = await fetch(`/api/urlhaus?${param}`, { signal });
+        resp = await fetch(`${SERVER_BASE}/api/urlhaus?${param}`, { signal });
       } else {
         const endpoint = isUrl ? 'https://urlhaus-api.abuse.ch/v1/url/' : 'https://urlhaus-api.abuse.ch/v1/payload/';
         const body = new URLSearchParams(isUrl ? { url: ioc.value } : { sha256_hash: ioc.value.toLowerCase() });

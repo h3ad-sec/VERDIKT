@@ -11,12 +11,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function detectMode() {
+  const isStaticHost = ['github.io','netlify.app','pages.dev'].some(h => location.hostname.endsWith(h));
+  const statusUrl = isStaticHost
+    ? 'https://verdikt-alpha.vercel.app/api/status'
+    : '/api/status';
   try {
-    const resp = await fetch('/api/status', { signal: AbortSignal.timeout(3000) });
+    const resp = await fetch(statusUrl, { signal: AbortSignal.timeout(3000) });
     if (resp.ok) {
       const status = await resp.json();
       if (status.mode === 'server') {
         SERVER_MODE = true;
+        if (isStaticHost) SERVER_BASE = 'https://verdikt-alpha.vercel.app';
         window._serverVTPaid = status.vt_paid === true;
         setMode('server');
         setServerStatusDots(status);
