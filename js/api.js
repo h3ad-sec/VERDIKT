@@ -16,7 +16,7 @@ const API = {
     try {
       const resp = SERVER_MODE
         ? await fetch(`${SERVER_BASE}/api/vt?path=${encodeURIComponent(vtPath)}`, { signal })
-        : await fetch(proxied(`https://www.virustotal.com${vtPath}`), { headers:{ 'x-apikey': getKey('vt') }, signal });
+        : await fetch(`https://www.virustotal.com${vtPath}`, { headers:{ 'x-apikey': getKey('vt') }, signal });
       if (!resp.ok) return vtHttpErr(resp.status);
       return parseVTResponse(await resp.json(), t);
     } catch(e) { return { source:'virustotal', error: fmtErr(e) }; }
@@ -27,7 +27,7 @@ const API = {
     try {
       const resp = SERVER_MODE
         ? await fetch(`${SERVER_BASE}/api/abuseipdb?ip=${encodeURIComponent(ioc.value)}`, { signal })
-        : await fetch(proxied(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ioc.value)}&maxAgeInDays=90&verbose`), {
+        : await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ioc.value)}&maxAgeInDays=90&verbose`, {
             headers:{ 'Key': getKey('ab'), 'Accept':'application/json' }, signal
           });
       if (!resp.ok) return abHttpErr(resp.status);
@@ -49,7 +49,7 @@ const API = {
     try {
       const resp = SERVER_MODE
         ? await fetch(`${SERVER_BASE}/api/otx?path=${encodeURIComponent(path)}`, { signal })
-        : await fetch(proxied(`https://otx.alienvault.com${path}`), { headers:{ 'X-OTX-API-KEY': getKey('otx') }, signal });
+        : await fetch(`https://otx.alienvault.com${path}`, { headers:{ 'X-OTX-API-KEY': getKey('otx') }, signal });
       if (!resp.ok) return otxHttpErr(resp.status);
       return parseOTXResponse(await resp.json(), t);
     } catch(e) { return { source:'otx', error: fmtErr(e) }; }
@@ -74,7 +74,7 @@ const API = {
       return parseMalwareBazaarResponse(await resp.json());
     } catch(e) {
       if (!SERVER_MODE && e?.message?.match(/fetch|network|load/i))
-        return { source:'malwarebazaar', skipped:true, reason:'CORS blocked — use managed deployment or set proxy URL' };
+        return { source:'malwarebazaar', skipped:true, reason:'CORS blocked — use managed deployment' };
       return { source:'malwarebazaar', error: fmtErr(e) };
     }
   },
@@ -102,7 +102,7 @@ const API = {
       return parseURLhausResponse(await resp.json(), isUrl ? 'url' : 'hash');
     } catch(e) {
       if (!SERVER_MODE && e?.message?.match(/fetch|network|load/i))
-        return { source:'urlhaus', skipped:true, reason:'CORS blocked — use managed deployment or set proxy URL' };
+        return { source:'urlhaus', skipped:true, reason:'CORS blocked — use managed deployment' };
       return { source:'urlhaus', error: fmtErr(e) };
     }
   },
@@ -252,16 +252,6 @@ function buildOTXLink(data, type) {
   return 'https://otx.alienvault.com';
 }
 
-function getProxyURL() {
-  const el = document.getElementById('cors-proxy-url');
-  if (el?.value.trim()) return el.value.trim().replace(/\/+$/, '');
-  return localStorage.getItem('tg_cors_proxy') || '';
-}
-function proxied(url) {
-  if (SERVER_MODE) return url;
-  const p = getProxyURL();
-  return p ? `${p}/${url}` : url;
-}
 
 function getKey(service) {
   const el = document.getElementById(`${service}-key`);

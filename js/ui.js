@@ -583,17 +583,14 @@ function toggleKey(id) {
 function saveKeys() {
   ['vt','ab','otx','abch'].forEach(s=>{ const v=document.getElementById(`${s}-key`)?.value.trim(); if(v) localStorage.setItem(`tg_${s}_key`,v); });
   localStorage.setItem('tg_vt_paid',document.getElementById('vt-paid')?.checked?'1':'0');
-  const proxy=document.getElementById('cors-proxy-url')?.value.trim();
-  if(proxy) localStorage.setItem('tg_cors_proxy',proxy); else localStorage.removeItem('tg_cors_proxy');
   updateStatusDots();
   const msg=document.getElementById('key-saved-msg');
   msg.textContent='✓ Saved'; msg.classList.add('show');
   setTimeout(()=>msg.classList.remove('show'),3000);
 }
 function clearKeys() {
-  ['tg_vt_key','tg_ab_key','tg_otx_key','tg_abch_key','tg_vt_paid','tg_cors_proxy'].forEach(k=>localStorage.removeItem(k));
+  ['tg_vt_key','tg_ab_key','tg_otx_key','tg_abch_key','tg_vt_paid'].forEach(k=>localStorage.removeItem(k));
   ['vt','ab','otx','abch'].forEach(s=>{ const el=document.getElementById(`${s}-key`); if(el) el.value=''; });
-  const proxyEl=document.getElementById('cors-proxy-url'); if(proxyEl) proxyEl.value='';
   const paid=document.getElementById('vt-paid'); if(paid) paid.checked=false;
   updateVTPaidUI(); updateStatusDots();
   const msg=document.getElementById('key-saved-msg');
@@ -603,7 +600,6 @@ function clearKeys() {
 function loadSavedKeys() {
   ['vt','ab','otx','abch'].forEach(s=>{ const v=localStorage.getItem(`tg_${s}_key`); const el=document.getElementById(`${s}-key`); if(v&&el) el.value=v; });
   const paid=document.getElementById('vt-paid'); if(paid) paid.checked=localStorage.getItem('tg_vt_paid')==='1';
-  const proxy=localStorage.getItem('tg_cors_proxy'); const proxyEl=document.getElementById('cors-proxy-url'); if(proxy&&proxyEl) proxyEl.value=proxy;
   updateVTPaidUI(); updateStatusDots();
 }
 function updateVTPaidUI() {
