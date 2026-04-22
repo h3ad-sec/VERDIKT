@@ -11,16 +11,16 @@ function setMode(mode) {
   if (mode === 'server') {
     hide('api-panel'); show('server-banner'); hide('browser-banner');
     const btn=document.getElementById('mode-toggle-btn');
-    if (btn) { btn.textContent='INPUT KEY MODE'; btn.dataset.mode='server'; }
+    if (btn) { btn.textContent='BYOK MODE'; btn.dataset.mode='server'; }
     const badge=document.getElementById('mode-badge');
     if (badge) { badge.textContent='MANAGED'; badge.className='mode-badge mode-server'; }
-    const el=document.getElementById('footer-key-note'); if(el) el.textContent='Keys secured server-side';
+    const el=document.getElementById('footer-key-note'); if(el) el.textContent='';
   } else {
     show('api-panel'); hide('server-banner'); show('browser-banner');
     const btn=document.getElementById('mode-toggle-btn');
     if (btn) { btn.textContent='MANAGED MODE'; btn.dataset.mode='input'; }
     const badge=document.getElementById('mode-badge');
-    if (badge) { badge.textContent='INPUT KEYS'; badge.className='mode-badge mode-input'; }
+    if (badge) { badge.textContent='BYOK'; badge.className='mode-badge mode-input'; }
     const el=document.getElementById('footer-key-note'); if(el) el.textContent='Keys in localStorage';
     loadSavedKeys(); updateStatusDots();
   }
