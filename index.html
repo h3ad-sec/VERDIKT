@@ -75,14 +75,14 @@
       <div class="hstatus-divider"></div>
       <div class="hstatus-item" id="server-mode-badge" style="display:none">
         <svg width="9" height="9" viewBox="0 0 9 9"><rect x="0.5" y="0.5" width="8" height="8" stroke="var(--accent)" stroke-width="0.8"/><path d="M2 4.5h5M4.5 2v5" stroke="var(--accent)" stroke-width="0.8"/></svg>
-        <span style="color:var(--accent)">SERVER KEYS</span>
+        <span style="color:var(--accent)">MANAGED</span>
       </div>
       <div class="hstatus-item"><span style="color:var(--muted)"><span id="session-count">0</span> VERDICTS</span></div>
     </div>
 
     <div class="hero-right">
       <div class="mode-badge mode-input" id="mode-badge">INPUT KEYS</div>
-      <button class="mode-toggle-btn" id="mode-toggle-btn" data-mode="input" onclick="toggleMode()">SERVER KEY MODE</button>
+      <button class="mode-toggle-btn" id="mode-toggle-btn" data-mode="input" onclick="toggleMode()">MANAGED MODE</button>
     </div>
   </div>
 </div>
@@ -92,11 +92,11 @@
 
   <div class="mode-banner server-mode-banner" id="server-banner" style="display:none">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 3.5v6L6.5 12 1 9.5v-6L6.5 1Z" stroke="var(--accent)" stroke-width="1"/><circle cx="6.5" cy="6.5" r="1.8" fill="var(--accent)"/></svg>
-    <span><strong style="color:var(--accent)">Server Mode</strong> — API keys are in Vercel environment variables. They never reach your browser.</span>
+    <span><strong style="color:var(--accent)">Managed Mode</strong> — API keys are secured server-side. They never reach your browser.</span>
   </div>
   <div class="mode-banner browser-mode-banner" id="browser-banner" style="display:none">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="var(--yellow)" stroke-width="1"/><path d="M6.5 4v3l1.8 1.8" stroke="var(--yellow)" stroke-width="1" stroke-linecap="round"/></svg>
-    <span><strong style="color:var(--yellow)">Browser Mode</strong> — Keys saved to localStorage. Deploy to Vercel with env vars for server-side storage.</span>
+    <span><strong style="color:var(--yellow)">Browser Mode</strong> — Keys saved to localStorage. Use managed deployment for server-side key storage.</span>
   </div>
 
   <div class="quick-ioc-bar">
@@ -300,8 +300,8 @@
         <button class="result-filter active" data-filter="all"        onclick="filterResults('all',this)">ALL</button>
         <button class="result-filter"        data-filter="malicious"  onclick="filterResults('malicious',this)">🔴 MAL</button>
         <button class="result-filter"        data-filter="suspicious" onclick="filterResults('suspicious',this)">🟡 SUS</button>
-        <button class="result-filter"        data-filter="clean"      onclick="filterResults('clean',this)">🟢 CLEAN</button>
-        <button class="result-filter"        data-filter="unknown"    onclick="filterResults('unknown',this)">⚪ UNK</button>
+        <button class="result-filter"        data-filter="benign"     onclick="filterResults('benign',this)">🟢 INFO</button>
+        <button class="result-filter"        data-filter="unknown"    onclick="filterResults('unknown',this)">⚪ LOW</button>
       </div>
       <div class="filter-group">
         <span class="filter-bar-label">TYPE:</span>
@@ -386,7 +386,7 @@ else{document.body.classList.add('dark');document.body.classList.remove('light')
 function updateVTPaidBadge(){const paid=document.getElementById('vt-paid')?.checked;const b=document.getElementById('vt-paid-badge');if(b)b.style.display=paid?'':'none';}
 
 const canvas=document.getElementById('matrix'),ctx=canvas.getContext('2d');
-const chars=['443','80','8443','3389','445','22','53','T1003','T1059','T1047','T1021','T1566','T1071','T1218','T1547','T1486','T1055','T1105','IOC','IOA','YARA','SIGMA','STIX2','TAXII','Enrichment','Correlation','Attribution','ThreatHunt','MD5','SHA1','SHA256','SHA512','Detection','Response','Containment','Triage','Indicator','Feed','Pulse','CVE','CVSS','Exploit','Payload','Analysis','Sandbox','Reputation','Blocklist','Allowlist','Firewall','EDR','XDR','SIEM','SOAR','4624','4625','4688','4672','4768','4769','IAM','AzureAD','OAuth','CloudTrail','BLOCK','INVESTIGATE','ALLOW','MONITOR','VERDIKT','MALICIOUS','SUSPICIOUS','BENIGN','UNKNOWN','VT','ABUSEIPDB','OTX','SHODAN','URLHAUS','H3AD-SEC'];
+const chars=['443','80','8443','3389','445','22','53','T1003','T1059','T1047','T1021','T1566','T1071','T1218','T1547','T1486','T1055','T1105','IOC','IOA','YARA','SIGMA','STIX2','TAXII','Enrichment','Correlation','Attribution','ThreatHunt','MD5','SHA1','SHA256','SHA512','Detection','Response','Containment','Triage','Indicator','Feed','Pulse','CVE','CVSS','Exploit','Payload','Analysis','Sandbox','Reputation','Blocklist','Allowlist','Firewall','EDR','XDR','SIEM','SOAR','4624','4625','4688','4672','4768','4769','IAM','AzureAD','OAuth','CloudTrail','BLOCK','INVESTIGATE','ALLOW','MONITOR','VERDIKT','MALICIOUS','SUSPICIOUS','INFORMATIONAL','LOW','VT','ABUSEIPDB','OTX','SHODAN','URLHAUS','H3AD-SEC'];
 let drops=[];
 function initMatrix(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drops=Array(Math.floor(window.innerWidth/18)).fill(1);}
 function drawMatrix(){const l=document.body.classList.contains('light');ctx.fillStyle=l?'rgba(245,247,251,0.08)':'rgba(0,0,0,0.12)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=l?'#0077ff':'#00ff9f';ctx.font='12px monospace';for(let i=0;i<drops.length;i++){ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*18,drops[i]*18);if(drops[i]*18>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}}

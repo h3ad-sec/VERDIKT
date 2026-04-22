@@ -74,7 +74,7 @@ const API = {
       return parseMalwareBazaarResponse(await resp.json());
     } catch(e) {
       if (!SERVER_MODE && e?.message?.match(/fetch|network|load/i))
-        return { source:'malwarebazaar', skipped:true, reason:'CORS blocked — deploy to Vercel or set proxy URL' };
+        return { source:'malwarebazaar', skipped:true, reason:'CORS blocked — use managed deployment or set proxy URL' };
       return { source:'malwarebazaar', error: fmtErr(e) };
     }
   },
@@ -102,7 +102,7 @@ const API = {
       return parseURLhausResponse(await resp.json(), isUrl ? 'url' : 'hash');
     } catch(e) {
       if (!SERVER_MODE && e?.message?.match(/fetch|network|load/i))
-        return { source:'urlhaus', skipped:true, reason:'CORS blocked — deploy to Vercel or set proxy URL' };
+        return { source:'urlhaus', skipped:true, reason:'CORS blocked — use managed deployment or set proxy URL' };
       return { source:'urlhaus', error: fmtErr(e) };
     }
   },

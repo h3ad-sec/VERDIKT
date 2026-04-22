@@ -13,12 +13,12 @@ function setMode(mode) {
     const btn=document.getElementById('mode-toggle-btn');
     if (btn) { btn.textContent='INPUT KEY MODE'; btn.dataset.mode='server'; }
     const badge=document.getElementById('mode-badge');
-    if (badge) { badge.textContent='SERVER KEYS'; badge.className='mode-badge mode-server'; }
-    const el=document.getElementById('footer-key-note'); if(el) el.textContent='Keys in Vercel env vars';
+    if (badge) { badge.textContent='MANAGED'; badge.className='mode-badge mode-server'; }
+    const el=document.getElementById('footer-key-note'); if(el) el.textContent='Keys secured server-side';
   } else {
     show('api-panel'); hide('server-banner'); show('browser-banner');
     const btn=document.getElementById('mode-toggle-btn');
-    if (btn) { btn.textContent='SERVER KEY MODE'; btn.dataset.mode='input'; }
+    if (btn) { btn.textContent='MANAGED MODE'; btn.dataset.mode='input'; }
     const badge=document.getElementById('mode-badge');
     if (badge) { badge.textContent='INPUT KEYS'; badge.className='mode-badge mode-input'; }
     const el=document.getElementById('footer-key-note'); if(el) el.textContent='Keys in localStorage';
@@ -73,8 +73,8 @@ function buildVerdictCell(verdict, action, score, confidence, done) {
   const vMap = {
     malicious: { icon:'🔴', label:'MALICIOUS',  cls:'verdict-malicious' },
     suspicious:{ icon:'🟡', label:'SUSPICIOUS', cls:'verdict-suspicious' },
-    benign:    { icon:'🟢', label:'BENIGN',     cls:'verdict-benign' },
-    unknown:   { icon:'⚪', label:'UNKNOWN',    cls:'verdict-unknown' },
+    benign:    { icon:'🟢', label:'INFORMATIONAL', cls:'verdict-benign' },
+    unknown:   { icon:'⚪', label:'LOW',           cls:'verdict-unknown' },
     error:     { icon:'⚫', label:'ERROR',      cls:'verdict-error' },
   };
   const v = vMap[verdict] || vMap.unknown;
@@ -189,8 +189,8 @@ function renderSummary(results) {
     <div class="summary-card sc-total"><div class="sc-icon">📊</div><div><div class="summary-num">${results.length}</div><div class="summary-lbl">TOTAL</div></div></div>
     <div class="summary-card sc-malicious"><div class="sc-icon">🔴</div><div><div class="summary-num">${cnt.malicious}</div><div class="summary-lbl">MALICIOUS</div></div></div>
     <div class="summary-card sc-suspicious"><div class="sc-icon">🟡</div><div><div class="summary-num">${cnt.suspicious}</div><div class="summary-lbl">SUSPICIOUS</div></div></div>
-    <div class="summary-card sc-benign"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.benign}</div><div class="summary-lbl">BENIGN</div></div></div>
-    <div class="summary-card sc-unknown"><div class="sc-icon">⚪</div><div><div class="summary-num">${cnt.unknown}</div><div class="summary-lbl">UNKNOWN</div></div></div>
+    <div class="summary-card sc-benign"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.benign}</div><div class="summary-lbl">INFO</div></div></div>
+    <div class="summary-card sc-unknown"><div class="sc-icon">⚪</div><div><div class="summary-num">${cnt.unknown}</div><div class="summary-lbl">LOW</div></div></div>
     <div class="summary-card sc-score"><div class="sc-icon">⚡</div><div><div class="summary-num">${avg!=null?avg:'—'}</div><div class="summary-lbl">AVG RISK</div></div></div>`;
 
   renderDecisionPanel(results);
@@ -376,7 +376,7 @@ function buildScoreBreakdown(entry) {
 function buildModalContent(entry) {
   const { ioc, verdict, action, score, confidence, reasons, indicators, firstSeen, lastSeen, vt, ab, otx, mb, uh, shodan } = entry;
 
-  const vMap = { malicious:{icon:'🔴',cls:'verdict-malicious'}, suspicious:{icon:'🟡',cls:'verdict-suspicious'}, benign:{icon:'🟢',cls:'verdict-benign'}, unknown:{icon:'⚪',cls:'verdict-unknown'} };
+  const vMap = { malicious:{icon:'🔴',label:'MALICIOUS',cls:'verdict-malicious'}, suspicious:{icon:'🟡',label:'SUSPICIOUS',cls:'verdict-suspicious'}, benign:{icon:'🟢',label:'INFORMATIONAL',cls:'verdict-benign'}, unknown:{icon:'⚪',label:'LOW',cls:'verdict-unknown'} };
   const aMap = { block:{icon:'🚫',cls:'action-block'}, investigate:{icon:'🔍',cls:'action-investigate'}, allow:{icon:'✅',cls:'action-allow'}, monitor:{icon:'⏳',cls:'action-monitor'} };
   const v=vMap[verdict]||vMap.unknown, a=aMap[action]||aMap.monitor;
 
@@ -393,7 +393,7 @@ function buildModalContent(entry) {
 
     <div class="modal-verdict-card">
       <div class="mvc-left">
-        <div class="mvc-verdict"><span class="verdict-badge ${v.cls}">${v.icon} ${(verdict||'unknown').toUpperCase()}</span></div>
+        <div class="mvc-verdict"><span class="verdict-badge ${v.cls}">${v.icon} ${v.label}</span></div>
         <div class="mvc-action"><span class="action-badge ${a.cls}">${a.icon} ${(action||'monitor').toUpperCase()}</span></div>
       </div>
       <div class="mvc-center">

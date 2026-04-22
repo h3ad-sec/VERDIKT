@@ -27,9 +27,9 @@ async function detectMode() {
         setServerStatusDots(status);
         document.getElementById('server-mode-badge').style.display = '';
         const rn = document.getElementById('rate-note-text');
-        if (rn) rn.textContent = status.vt_paid ? 'Server mode · VT Paid — fully parallel' : 'Server mode · VT Free — token bucket (4 req/min)';
+        if (rn) rn.textContent = status.vt_paid ? 'Managed · VT Paid — fully parallel' : 'Managed · VT Free — token bucket (4 req/min)';
         const active = ['vt','abuseipdb','otx','abusech'].filter(k => status[k]).length;
-        showToast(`Server mode — ${active}/4 keys configured`, active > 0 ? 'success' : 'warning');
+        showToast(`Managed mode — ${active}/4 sources active`, active > 0 ? 'success' : 'warning');
         return;
       }
     }
