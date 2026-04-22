@@ -78,7 +78,7 @@ function buildVerdictCell(verdict, action, score, confidence, done) {
     error:     { icon:'⚫', label:'ERROR',      cls:'verdict-error' },
   };
   const v = vMap[verdict] || vMap.unknown;
-  const confColor = { high:'var(--accent)', medium:'var(--yellow)', low:'var(--muted)', informational:'var(--border)' }[confidence] || 'var(--muted)';
+  const confColor = { high:'var(--accent)', medium:'var(--yellow)', low:'var(--muted)', informational:'var(--accent2)' }[confidence] || 'var(--muted)';
   return `<div class="verdict-cell">
     <span class="verdict-badge ${v.cls}">${v.icon} ${v.label}</span>
     <div class="vc-meta">
