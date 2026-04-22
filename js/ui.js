@@ -73,12 +73,12 @@ function buildVerdictCell(verdict, action, score, confidence, done) {
   const vMap = {
     malicious: { icon:'🔴', label:'MALICIOUS',  cls:'verdict-malicious' },
     suspicious:{ icon:'🟡', label:'SUSPICIOUS', cls:'verdict-suspicious' },
-    benign:    { icon:'🟢', label:'INFORMATIONAL', cls:'verdict-benign' },
-    unknown:   { icon:'⚪', label:'LOW',           cls:'verdict-unknown' },
+    benign:    { icon:'🟢', label:'BENIGN',     cls:'verdict-benign' },
+    unknown:   { icon:'⚪', label:'UNKNOWN',    cls:'verdict-unknown' },
     error:     { icon:'⚫', label:'ERROR',      cls:'verdict-error' },
   };
   const v = vMap[verdict] || vMap.unknown;
-  const confColor = { high:'var(--accent)', medium:'var(--yellow)', low:'var(--muted)' }[confidence] || 'var(--muted)';
+  const confColor = { high:'var(--accent)', medium:'var(--yellow)', low:'var(--muted)', informational:'var(--border)' }[confidence] || 'var(--muted)';
   return `<div class="verdict-cell">
     <span class="verdict-badge ${v.cls}">${v.icon} ${v.label}</span>
     <div class="vc-meta">
@@ -91,7 +91,7 @@ function buildVerdictCell(verdict, action, score, confidence, done) {
 function buildDecisionCell(action, reasons, done) {
   if (!done) return '<span class="src-loading">…</span>';
   const aMap = {
-    block:       { icon:'🚫', label:'BLOCK IMMEDIATELY', cls:'action-block' },
+    block:       { icon:'🚫', label:'BLOCK',       cls:'action-block' },
     investigate: { icon:'🔍', label:'INVESTIGATE',       cls:'action-investigate' },
     allow:       { icon:'✅', label:'ALLOW',             cls:'action-allow' },
     monitor:     { icon:'⏳', label:'MONITOR',           cls:'action-monitor' },
@@ -189,8 +189,8 @@ function renderSummary(results) {
     <div class="summary-card sc-total"><div class="sc-icon">📊</div><div><div class="summary-num">${results.length}</div><div class="summary-lbl">TOTAL</div></div></div>
     <div class="summary-card sc-malicious"><div class="sc-icon">🔴</div><div><div class="summary-num">${cnt.malicious}</div><div class="summary-lbl">MALICIOUS</div></div></div>
     <div class="summary-card sc-suspicious"><div class="sc-icon">🟡</div><div><div class="summary-num">${cnt.suspicious}</div><div class="summary-lbl">SUSPICIOUS</div></div></div>
-    <div class="summary-card sc-benign"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.benign}</div><div class="summary-lbl">INFO</div></div></div>
-    <div class="summary-card sc-unknown"><div class="sc-icon">⚪</div><div><div class="summary-num">${cnt.unknown}</div><div class="summary-lbl">LOW</div></div></div>
+    <div class="summary-card sc-benign"><div class="sc-icon">🟢</div><div><div class="summary-num">${cnt.benign}</div><div class="summary-lbl">BENIGN</div></div></div>
+    <div class="summary-card sc-unknown"><div class="sc-icon">⚪</div><div><div class="summary-num">${cnt.unknown}</div><div class="summary-lbl">UNKNOWN</div></div></div>
     <div class="summary-card sc-score"><div class="sc-icon">⚡</div><div><div class="summary-num">${avg!=null?avg:'—'}</div><div class="summary-lbl">AVG RISK</div></div></div>`;
 
   renderDecisionPanel(results);
@@ -376,7 +376,7 @@ function buildScoreBreakdown(entry) {
 function buildModalContent(entry) {
   const { ioc, verdict, action, score, confidence, reasons, indicators, firstSeen, lastSeen, vt, ab, otx, mb, uh, shodan } = entry;
 
-  const vMap = { malicious:{icon:'🔴',label:'MALICIOUS',cls:'verdict-malicious'}, suspicious:{icon:'🟡',label:'SUSPICIOUS',cls:'verdict-suspicious'}, benign:{icon:'🟢',label:'INFORMATIONAL',cls:'verdict-benign'}, unknown:{icon:'⚪',label:'LOW',cls:'verdict-unknown'} };
+  const vMap = { malicious:{icon:'🔴',label:'MALICIOUS',cls:'verdict-malicious'}, suspicious:{icon:'🟡',label:'SUSPICIOUS',cls:'verdict-suspicious'}, benign:{icon:'🟢',label:'BENIGN',cls:'verdict-benign'}, unknown:{icon:'⚪',label:'UNKNOWN',cls:'verdict-unknown'} };
   const aMap = { block:{icon:'🚫',cls:'action-block'}, investigate:{icon:'🔍',cls:'action-investigate'}, allow:{icon:'✅',cls:'action-allow'}, monitor:{icon:'⏳',cls:'action-monitor'} };
   const v=vMap[verdict]||vMap.unknown, a=aMap[action]||aMap.monitor;
 

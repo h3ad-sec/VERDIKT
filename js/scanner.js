@@ -251,7 +251,7 @@ function scoreEntry(entry) {
   if (!keySourcesRan && !freeSourceHit && verdict==='benign') { verdict='unknown'; action='monitor'; }
 
   let confidence;
-  if (sourcesChecked===0) confidence='low';
+  if (sourcesChecked===0) confidence='informational';
   else if (sourcesMalicious>=2||sourcesChecked>=3) confidence='high';
   else if (sourcesChecked>=2||sourcesMalicious>=1) confidence='medium';
   else confidence='low';
