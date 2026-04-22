@@ -163,7 +163,7 @@ function extractLastSeen(vt, ab, mb, uh) {
 }
 
 function maxScoreForType(type) {
-  let max = 15;
+  let max = 8;
   if (type !== 'email') max += 40;
   if (type === 'ip' || type === 'ipv6') max += 30;
   if (type === 'hash_md5' || type === 'hash_sha1' || type === 'hash_sha256' || type === 'url') max += 10;
@@ -200,7 +200,7 @@ function scoreEntry(entry) {
   if (otx && !otx.skipped && !otx.error) {
     sourcesChecked++;
     const p=otx.pulseCount||0;
-    score += Math.min(15, Math.round((p/10)*15));
+    score += Math.min(8, Math.round((p/10)*8));
     if (p>0) {
       indicators.push(`OTX: ${p} pulse${p>1?'s':''}`);
       reasons.push(p>=5 ? `Listed in ${p} OTX threat pulses` : `Found in ${p} OTX threat feed${p>1?'s':''}`);
@@ -249,6 +249,9 @@ function scoreEntry(entry) {
   const keySourcesRan = (vt&&!vt.skipped&&!vt.error) || (ab&&!ab.skipped&&!ab.error) || (otx&&!otx.skipped&&!otx.error);
   const freeSourceHit = anyFreeHit;
   if (!keySourcesRan && !freeSourceHit && verdict==='benign') verdict='unknown';
+
+  const otxPulses = (otx && !otx.skipped && !otx.error) ? (otx.pulseCount||0) : 0;
+  if (verdict==='benign' && otxPulses>0) verdict='unknown';
 
   const verdictMeta = {
     malicious:  { confidence:'high',          action:'block' },
