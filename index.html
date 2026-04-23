@@ -1,392 +1,484 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VERDIKT — Every IOC. One Verdict. // H3AD-SEC</title>
-<meta name="description" content="VERDIKT by H3AD-SEC — Bulk IOC checker with parallel engine. VT · AbuseIPDB · OTX · MalwareBazaar · Shodan · URLhaus. Every IOC. One verdict.">
-<link rel="icon" href="https://h3ad-sec.github.io/logo-dark.png" type="image/png">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERDIKT - Every IOC. One Verdict</title>
+  <meta name="description"
+    content="VERDIKT by H3AD-SEC - Bulk IOC checker with parallel engine. VT · AbuseIPDB · OTX · MalwareBazaar · Shodan · URLhaus. Every IOC. One verdict.">
+  <link rel="icon" href="https://h3ad-sec.github.io/fevicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="dark">
-<canvas id="matrix"></canvas>
+  <canvas id="matrix"></canvas>
 
-<nav class="nav">
-  <div class="hamburger" id="hamburger" onclick="toggleDrawer()"><span></span><span></span><span></span></div>
-  <a class="nav-brand" href="https://h3ad-sec.github.io" target="_blank" rel="noopener">
-    <img id="navLogo" src="https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png" alt="H3AD-SEC" style="height:22px;vertical-align:middle;">
-  </a>
-  <div class="nav-links">
-    <div class="nav-divider"></div>
-    <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener">HOME</a>
-    <div class="nav-divider"></div>
-    <div class="nav-item">
-      <a href="https://h3ad-sec.github.io/h3ad-x/" target="_blank" rel="noopener">H3AD-X</a>
-      <div class="nav-dropdown">
-        <div class="nav-dropdown-inner">
-          <a href="https://h3ad-sec.github.io/VERDIKT/" target="_blank" rel="noopener" class="nav-current">VERDIKT</a>
-        </div>
-      </div>
-    </div>
-    <a href="https://h3ad-sec.github.io/h3ad-ai/" target="_blank" rel="noopener">H3AD-AI</a>
-    <a href="https://h3ad-sec.github.io/h3ad-detect/" target="_blank" rel="noopener">H3AD-DETECT</a>
-    <a href="https://h3ad-sec.github.io/h3ad-hunt/" target="_blank" rel="noopener">H3AD-HUNT</a>
-    <a href="https://h3ad-sec.github.io/h3ad-ops/" target="_blank" rel="noopener">H3AD-OPS</a>
-    <a href="https://h3ad-sec.github.io/h3ad-df/" target="_blank" rel="noopener">H3AD-DF</a>
-    <a href="https://h3ad-sec.github.io/h3ad-ir/" target="_blank" rel="noopener">H3AD-IR</a>
-    <div class="nav-divider"></div>
-    <a href="mailto:h3adsec@gmail.com">CONTACT</a>
-  </div>
-  <div class="nav-right">
-    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-      <div class="toggle-track"><div class="toggle-thumb"></div></div>
-    </div>
-  </div>
-</nav>
-<div class="nav-drawer" id="navDrawer">
-  <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener" onclick="closeDrawer()">HOME ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-x/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-X ↗</a>
-  <a href="https://h3ad-sec.github.io/VERDIKT/" target="_blank" rel="noopener" onclick="closeDrawer()" class="drawer-sub">↳ VERDIKT ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-ai/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-AI ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-detect/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-DETECT ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-hunt/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-HUNT ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-ops/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-OPS ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-df/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-DF ↗</a>
-  <a href="https://h3ad-sec.github.io/h3ad-ir/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-IR ↗</a>
-  <a href="mailto:h3adsec@gmail.com" onclick="closeDrawer()">CONTACT</a>
-</div>
-
-<div class="verdikt-hero">
-  <div class="hero-inner">
-    <div class="hero-left">
-      <div class="hero-breadcrumb">
-        <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener">H3AD-SEC</a>
-        <span>›</span><span class="hero-current">VERDIKT</span>
-      </div>
-      <div class="hero-title"><span class="hero-ver">VER</span><span class="hero-dikt">DIKT</span></div>
-      <div class="hero-tagline">Every IOC. One verdict.</div>
-    </div>
-
-    <div class="hero-status">
-      <div class="hstatus-item" id="vt-status">
-        <div class="hstatus-dot off"></div><span style="color:var(--vt)">VT</span>
-        <span id="vt-paid-badge" class="tier-badge" style="display:none">PAID</span>
-      </div>
-      <div class="hstatus-item" id="ab-status"><div class="hstatus-dot off"></div><span style="color:var(--ab)">AIPDB</span></div>
-      <div class="hstatus-item" id="otx-status"><div class="hstatus-dot off"></div><span style="color:var(--otx)">OTX</span></div>
-      <div class="hstatus-divider"></div>
-      <div class="hstatus-item" id="mb-status"><div class="hstatus-dot off"></div><span style="color:var(--mb)">MB</span></div>
-      <div class="hstatus-item"><div class="hstatus-dot on" style="background:var(--sh);box-shadow:0 0 5px var(--sh)"></div><span style="color:var(--sh)">SHODAN</span></div>
-      <div class="hstatus-item" id="uh-status"><div class="hstatus-dot off"></div><span style="color:var(--uh)">UH</span></div>
-      <div class="hstatus-divider"></div>
-      <div class="hstatus-item" id="server-mode-badge" style="display:none">
-        <svg width="9" height="9" viewBox="0 0 9 9"><rect x="0.5" y="0.5" width="8" height="8" stroke="var(--accent)" stroke-width="0.8"/><path d="M2 4.5h5M4.5 2v5" stroke="var(--accent)" stroke-width="0.8"/></svg>
-        <span style="color:var(--accent)">MANAGED</span>
-      </div>
-      <div class="hstatus-item"><span style="color:var(--muted)"><span id="session-count">0</span> VERDICTS</span></div>
-    </div>
-
-    <div class="hero-right">
-      <div class="mode-badge mode-input" id="mode-badge">BYOK</div>
-      <button class="mode-toggle-btn" id="mode-toggle-btn" data-mode="input" onclick="toggleMode()">MANAGED MODE</button>
-    </div>
-  </div>
-</div>
-
-<div class="wrapper">
-<main>
-
-  <div class="mode-banner server-mode-banner" id="server-banner" style="display:none">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 3.5v6L6.5 12 1 9.5v-6L6.5 1Z" stroke="var(--accent)" stroke-width="1"/><circle cx="6.5" cy="6.5" r="1.8" fill="var(--accent)"/></svg>
-    <span><strong style="color:var(--accent)">Managed Mode</strong> — Server-side · Zero client exposure.</span>
-  </div>
-  <div class="mode-banner browser-mode-banner" id="browser-banner" style="display:none">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="var(--yellow)" stroke-width="1"/><path d="M6.5 4v3l1.8 1.8" stroke="var(--yellow)" stroke-width="1" stroke-linecap="round"/></svg>
-    <span><strong style="color:var(--yellow)">BYOK Mode</strong> — Keys saved to localStorage. Use managed deployment for zero client exposure.</span>
-  </div>
-
-  <div class="quick-ioc-bar">
-    <div class="quick-ioc-label">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="var(--accent2)" stroke-width="1"/><path d="M6 3v3.5L8 8" stroke="var(--accent2)" stroke-width="1" stroke-linecap="round"/></svg>
-      QUICK LOOKUP
-    </div>
-    <input type="text" id="single-ioc-input" class="quick-ioc-input"
-      placeholder="Paste single IOC — IP, domain, URL, hash, email — press Enter"
-      onkeydown="if(event.key==='Enter') scanSingleIOC()">
-    <button class="btn btn-quick" onclick="scanSingleIOC()">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      ANALYZE
-    </button>
-  </div>
-
-  <section class="panel" id="api-panel">
-    <div class="panel-header" onclick="togglePanel('api-panel')">
-      <div class="panel-title">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="1" stroke="var(--accent)" stroke-width="1"/><path d="M3.5 6.5h6M6.5 3.5v6" stroke="var(--accent)" stroke-width="1"/></svg>
-        API CONFIGURATION
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="panel-meta">6 SOURCES · 4 KEY · 1 KEYLESS</span>
-        <div class="panel-chevron" id="api-panel-chevron">▲</div>
-      </div>
-    </div>
-    <div class="panel-body" id="api-panel-body">
-      <div class="api-grid">
-        <div class="api-key-group">
-          <label class="api-label" style="color:var(--vt)">
-            <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" stroke="var(--vt)" stroke-width="1" fill="none"/><path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--vt)" stroke-width="1"/></svg>
-            VIRUSTOTAL
-          </label>
-          <div class="key-input-wrap">
-            <input type="password" class="api-input" id="vt-key" placeholder="VT API key…" autocomplete="off" oninput="updateStatusDots()">
-            <button class="key-toggle" onclick="toggleKey('vt-key')">SHOW</button>
+  <nav class="nav">
+    <div class="hamburger" id="hamburger" onclick="toggleDrawer()"><span></span><span></span><span></span></div>
+    <a class="nav-brand" href="https://h3ad-sec.github.io" target="_blank" rel="noopener">
+      <img id="navLogo" src="https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png"
+        alt="H3AD-SEC" style="height:22px;vertical-align:middle;">
+    </a>
+    <div class="nav-links">
+      <div class="nav-divider"></div>
+      <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener">HOME</a>
+      <div class="nav-divider"></div>
+      <div class="nav-item">
+        <a href="https://h3ad-sec.github.io/h3ad-x/" target="_blank" rel="noopener">H3AD-X</a>
+        <div class="nav-dropdown">
+          <div class="nav-dropdown-inner">
+            <a href="https://h3ad-sec.github.io/VERDIKT/" target="_blank" rel="noopener" class="nav-current">VERDIKT</a>
           </div>
-          <label class="vt-paid-row" title="Paid VT key = no rate limit, full parallel speed">
-            <div class="paid-check-wrap">
-              <input type="checkbox" id="vt-paid" onchange="updateVTPaidUI();updateVTPaidBadge()">
-              <div class="paid-checkmark"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            </div>
-            <span class="paid-label">Paid / Premium tier</span>
-            <span class="paid-desc" id="vt-tier-note">Free: 4 req/min · 500/day</span>
-          </label>
-          <div class="api-note">IP · Domain · URL · MD5 · SHA1 · SHA256 · SHA512</div>
-        </div>
-        <div class="api-key-group">
-          <label class="api-label" style="color:var(--ab)">
-            <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" stroke="var(--ab)" stroke-width="1" fill="none"/><path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--ab)" stroke-width="1"/></svg>
-            ABUSEIPDB
-          </label>
-          <div class="key-input-wrap">
-            <input type="password" class="api-input" id="ab-key" placeholder="AbuseIPDB API key…" autocomplete="off" oninput="updateStatusDots()">
-            <button class="key-toggle" onclick="toggleKey('ab-key')">SHOW</button>
-          </div>
-          <div class="api-note">Free: 1,000 req/day · IPv4/IPv6 only</div>
-        </div>
-        <div class="api-key-group">
-          <label class="api-label" style="color:var(--otx)">
-            <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" stroke="var(--otx)" stroke-width="1" fill="none"/><path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--otx)" stroke-width="1"/></svg>
-            ALIENVAULT OTX
-          </label>
-          <div class="key-input-wrap">
-            <input type="password" class="api-input" id="otx-key" placeholder="OTX API key…" autocomplete="off" oninput="updateStatusDots()">
-            <button class="key-toggle" onclick="toggleKey('otx-key')">SHOW</button>
-          </div>
-          <div class="api-note">Free: generous limits · All IOC types incl. email</div>
-        </div>
-        <div class="api-key-group">
-          <label class="api-label">
-            <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" stroke="var(--mb)" stroke-width="1" fill="none"/><path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--mb)" stroke-width="1"/></svg>
-            <span style="color:var(--mb)">MALWAREBAZAAR</span><span style="color:var(--muted)"> · </span><span style="color:var(--uh)">URLHAUS</span>
-          </label>
-          <div class="key-input-wrap">
-            <input type="password" class="api-input" id="abch-key" placeholder="abuse.ch Auth-Key…" autocomplete="off" oninput="updateStatusDots()">
-            <button class="key-toggle" onclick="toggleKey('abch-key')">SHOW</button>
-          </div>
-          <div class="api-note">Free key at <a href="https://abuse.ch/api" target="_blank" style="color:var(--mb)">abuse.ch</a> · MB: MD5·SHA1·SHA256 · UH: URLs·SHA256</div>
         </div>
       </div>
-      <div class="free-sources-bar">
-        <span class="free-src-badge">NO KEY REQUIRED</span>
-        <div class="free-src-items">
-          <div class="free-src-item"><span class="free-dot" style="background:var(--sh)"></span><span style="color:var(--sh)">SHODAN INTERNETDB</span><span class="free-tag">shodan.io</span><span class="free-desc">IPv4→ports·CVEs</span></div>
+      <a href="https://h3ad-sec.github.io/h3ad-ai/" target="_blank" rel="noopener">H3AD-AI</a>
+      <a href="https://h3ad-sec.github.io/h3ad-detect/" target="_blank" rel="noopener">H3AD-DETECT</a>
+      <a href="https://h3ad-sec.github.io/h3ad-hunt/" target="_blank" rel="noopener">H3AD-HUNT</a>
+      <a href="https://h3ad-sec.github.io/h3ad-ops/" target="_blank" rel="noopener">H3AD-OPS</a>
+      <a href="https://h3ad-sec.github.io/h3ad-df/" target="_blank" rel="noopener">H3AD-DF</a>
+      <a href="https://h3ad-sec.github.io/h3ad-ir/" target="_blank" rel="noopener">H3AD-IR</a>
+      <div class="nav-divider"></div>
+      <a href="mailto:h3adsec@gmail.com">CONTACT</a>
+    </div>
+    <div class="nav-right">
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <div class="toggle-track">
+          <div class="toggle-thumb"></div>
         </div>
-      </div>
-
-
-      <div class="api-actions">
-        <button class="btn btn-save" onclick="saveKeys()">
-          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2h6l2 2v6H2V2z" stroke="currentColor" stroke-width="1" fill="none"/><rect x="4" y="7" width="4" height="3" stroke="currentColor" stroke-width="1"/><rect x="4" y="2" width="2" height="3" fill="currentColor"/></svg>
-          SAVE KEYS
-        </button>
-        <button class="btn btn-clear-keys" onclick="clearKeys()">CLEAR</button>
-        <div class="key-saved-msg" id="key-saved-msg"></div>
       </div>
     </div>
-  </section>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener" onclick="closeDrawer()">HOME ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-x/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-X ↗</a>
+    <a href="https://h3ad-sec.github.io/VERDIKT/" target="_blank" rel="noopener" onclick="closeDrawer()"
+      class="drawer-sub">↳ VERDIKT ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-ai/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-AI ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-detect/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-DETECT
+      ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-hunt/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-HUNT
+      ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-ops/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-OPS ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-df/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-DF ↗</a>
+    <a href="https://h3ad-sec.github.io/h3ad-ir/" target="_blank" rel="noopener" onclick="closeDrawer()">H3AD-IR ↗</a>
+    <a href="mailto:h3adsec@gmail.com" onclick="closeDrawer()">CONTACT</a>
+  </div>
 
-  <section class="panel" id="input-panel">
-    <div class="panel-header-static">
-      <div class="panel-title">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" stroke="var(--accent2)" stroke-width="1"/><path d="M3 4h7M3 6.5h7M3 9h4" stroke="var(--accent2)" stroke-width="1"/></svg>
-        BULK IOC INPUT
-      </div>
-      <div class="ioc-parsed-info" id="ioc-parsed-info"></div>
-    </div>
-    <div class="panel-body">
-      <div class="input-tabs">
-        <button class="input-tab active" onclick="switchInputTab('text',this)">PASTE / LOG</button>
-        <button class="input-tab" onclick="switchInputTab('file',this)">FILE UPLOAD</button>
+  <div class="verdikt-hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-breadcrumb">
+          <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener">H3AD-SEC</a>
+          <span>›</span><span class="hero-current">VERDIKT</span>
+        </div>
+        <div class="hero-title"><span class="hero-ver">VER</span><span class="hero-dikt">DIKT</span></div>
+        <div class="hero-tagline">Every IOC. One verdict.</div>
       </div>
 
-      <div class="tab-pane active" id="tab-text">
-        <textarea class="ioc-textarea" id="ioc-input"
-          placeholder="Paste IOCs or raw logs — VERDIKT auto-extracts&#10;&#10;Clean IOCs (one per line):&#10;  8.8.8.8 · malware.example.com · d41d8cd98f00b204e9800998ecf8427e&#10;&#10;Or paste raw firewall/SIEM logs:&#10;  Jan 15 10:23:44 fw1 src=192.0.2.10 dst=203.0.113.5 action=deny url=http://evil.com&#10;  Received: from [198.51.100.1] by mail.example.com&#10;&#10;Defanged IOCs supported: hxxp[://]  evil[.]com  1[.]2[.]3[.]4"
-          oninput="parseIOCsRealtime()"></textarea>
-        <div class="textarea-hint">Auto-detects: IPv4 · IPv6 · Domain · URL · MD5 · SHA1 · SHA256 · SHA512 · Email · Dedup · Defang · Log extraction (SIEM/firewall/email headers)</div>
-      </div>
-
-      <div class="tab-pane" id="tab-file">
-        <div class="upload-zone" id="upload-zone"
-          ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
-          onclick="document.getElementById('file-input').click()">
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-            <path d="M10 30v6h24v-6" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M22 8v22M14 18l8-10 8 10" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <div class="hero-status">
+        <div class="hstatus-item" id="vt-status">
+          <div class="hstatus-dot off"></div><span style="color:var(--vt)">VT</span>
+          <span id="vt-paid-badge" class="tier-badge" style="display:none">PAID</span>
+        </div>
+        <div class="hstatus-item" id="ab-status">
+          <div class="hstatus-dot off"></div><span style="color:var(--ab)">AIPDB</span>
+        </div>
+        <div class="hstatus-item" id="otx-status">
+          <div class="hstatus-dot off"></div><span style="color:var(--otx)">OTX</span>
+        </div>
+        <div class="hstatus-divider"></div>
+        <div class="hstatus-item" id="mb-status">
+          <div class="hstatus-dot off"></div><span style="color:var(--mb)">MB</span>
+        </div>
+        <div class="hstatus-item">
+          <div class="hstatus-dot on" style="background:var(--sh);box-shadow:0 0 5px var(--sh)"></div><span
+            style="color:var(--sh)">SHODAN</span>
+        </div>
+        <div class="hstatus-item" id="uh-status">
+          <div class="hstatus-dot off"></div><span style="color:var(--uh)">UH</span>
+        </div>
+        <div class="hstatus-divider"></div>
+        <div class="hstatus-item" id="server-mode-badge" style="display:none">
+          <svg width="9" height="9" viewBox="0 0 9 9">
+            <rect x="0.5" y="0.5" width="8" height="8" stroke="var(--accent)" stroke-width="0.8" />
+            <path d="M2 4.5h5M4.5 2v5" stroke="var(--accent)" stroke-width="0.8" />
           </svg>
-          <div class="upload-text">DROP FILE OR CLICK TO BROWSE</div>
-          <div class="upload-formats">.txt · .csv · .xlsx · .json</div>
-          <div class="upload-badge" id="upload-badge" style="display:none"></div>
+          <span style="color:var(--accent)">MANAGED</span>
         </div>
-        <input type="file" id="file-input" accept=".txt,.csv,.xlsx,.xls,.json" style="display:none" onchange="handleFileUpload(event)">
+        <div class="hstatus-item"><span style="color:var(--muted)"><span id="session-count">0</span> VERDICTS</span>
+        </div>
       </div>
 
-      <div class="ioc-breakdown" id="ioc-breakdown" style="display:none">
-        <div class="breakdown-title">DETECTED IOC TYPES</div>
-        <div class="breakdown-chips" id="breakdown-chips"></div>
+      <div class="hero-right">
+        <div class="mode-badge mode-input" id="mode-badge">BYOK</div>
+        <button class="mode-toggle-btn" id="mode-toggle-btn" data-mode="input" onclick="toggleMode()">MANAGED
+          MODE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <main>
+
+      <div class="mode-banner server-mode-banner" id="server-banner" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M6.5 1L12 3.5v6L6.5 12 1 9.5v-6L6.5 1Z" stroke="var(--accent)" stroke-width="1" />
+          <circle cx="6.5" cy="6.5" r="1.8" fill="var(--accent)" />
+        </svg>
+        <span><strong style="color:var(--accent)">Managed Mode</strong> — Server-side · Zero client exposure.</span>
+      </div>
+      <div class="mode-banner browser-mode-banner" id="browser-banner" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <circle cx="6.5" cy="6.5" r="5.5" stroke="var(--yellow)" stroke-width="1" />
+          <path d="M6.5 4v3l1.8 1.8" stroke="var(--yellow)" stroke-width="1" stroke-linecap="round" />
+        </svg>
+        <span><strong style="color:var(--yellow)">BYOK Mode</strong> — Keys saved to localStorage. Use managed
+          deployment for zero client exposure.</span>
       </div>
 
-      <div class="action-row">
-        <button class="btn btn-primary" id="scan-btn" onclick="startScan()" disabled>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M7 4.5v2.5l1.8 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="quick-ioc-bar">
+        <div class="quick-ioc-label">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="var(--accent2)" stroke-width="1" />
+            <path d="M6 3v3.5L8 8" stroke="var(--accent2)" stroke-width="1" stroke-linecap="round" />
+          </svg>
+          QUICK LOOKUP
+        </div>
+        <input type="text" id="single-ioc-input" class="quick-ioc-input"
+          placeholder="Paste single IOC — IP, domain, URL, hash, email — press Enter"
+          onkeydown="if(event.key==='Enter') scanSingleIOC()">
+        <button class="btn btn-quick" onclick="scanSingleIOC()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
           ANALYZE
         </button>
-        <button class="btn btn-stop" id="stop-btn" onclick="stopScan()" style="display:none">■ STOP</button>
-        <button class="btn btn-secondary" onclick="clearAll()">CLEAR</button>
-        <div class="rate-limit-note">
-          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" stroke="var(--muted)" stroke-width="1"/><path d="M5.5 3.5v2.5l1.5 1.5" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/></svg>
-          <span id="rate-note-text">Parallel engine · token bucket rate limiting</span>
+      </div>
+
+      <section class="panel" id="api-panel">
+        <div class="panel-header" onclick="togglePanel('api-panel')">
+          <div class="panel-title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="1" width="11" height="11" rx="1" stroke="var(--accent)" stroke-width="1" />
+              <path d="M3.5 6.5h6M6.5 3.5v6" stroke="var(--accent)" stroke-width="1" />
+            </svg>
+            API CONFIGURATION
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="panel-meta">6 SOURCES · 4 KEY · 1 KEYLESS</span>
+            <div class="panel-chevron" id="api-panel-chevron">▲</div>
+          </div>
         </div>
-        <div class="scan-count" id="scan-count"></div>
-      </div>
-    </div>
-  </section>
+        <div class="panel-body" id="api-panel-body">
+          <div class="api-grid">
+            <div class="api-key-group">
+              <label class="api-label" style="color:var(--vt)">
+                <svg width="11" height="11" viewBox="0 0 11 11">
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="var(--vt)" stroke-width="1" fill="none" />
+                  <path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--vt)" stroke-width="1" />
+                </svg>
+                VIRUSTOTAL
+              </label>
+              <div class="key-input-wrap">
+                <input type="password" class="api-input" id="vt-key" placeholder="VT API key…" autocomplete="off"
+                  oninput="updateStatusDots()">
+                <button class="key-toggle" onclick="toggleKey('vt-key')">SHOW</button>
+              </div>
+              <label class="vt-paid-row" title="Paid VT key = no rate limit, full parallel speed">
+                <div class="paid-check-wrap">
+                  <input type="checkbox" id="vt-paid" onchange="updateVTPaidUI();updateVTPaidBadge()">
+                  <div class="paid-checkmark"><svg width="10" height="10" viewBox="0 0 10 10">
+                      <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" stroke-width="1.5" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    </svg></div>
+                </div>
+                <span class="paid-label">Paid / Premium tier</span>
+                <span class="paid-desc" id="vt-tier-note">Free: 4 req/min · 500/day</span>
+              </label>
+              <div class="api-note">IP · Domain · URL · MD5 · SHA1 · SHA256 · SHA512</div>
+            </div>
+            <div class="api-key-group">
+              <label class="api-label" style="color:var(--ab)">
+                <svg width="11" height="11" viewBox="0 0 11 11">
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="var(--ab)" stroke-width="1" fill="none" />
+                  <path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--ab)" stroke-width="1" />
+                </svg>
+                ABUSEIPDB
+              </label>
+              <div class="key-input-wrap">
+                <input type="password" class="api-input" id="ab-key" placeholder="AbuseIPDB API key…" autocomplete="off"
+                  oninput="updateStatusDots()">
+                <button class="key-toggle" onclick="toggleKey('ab-key')">SHOW</button>
+              </div>
+              <div class="api-note">Free: 1,000 req/day · IPv4/IPv6 only</div>
+            </div>
+            <div class="api-key-group">
+              <label class="api-label" style="color:var(--otx)">
+                <svg width="11" height="11" viewBox="0 0 11 11">
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="var(--otx)" stroke-width="1" fill="none" />
+                  <path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--otx)" stroke-width="1" />
+                </svg>
+                ALIENVAULT OTX
+              </label>
+              <div class="key-input-wrap">
+                <input type="password" class="api-input" id="otx-key" placeholder="OTX API key…" autocomplete="off"
+                  oninput="updateStatusDots()">
+                <button class="key-toggle" onclick="toggleKey('otx-key')">SHOW</button>
+              </div>
+              <div class="api-note">Free: generous limits · All IOC types incl. email</div>
+            </div>
+            <div class="api-key-group">
+              <label class="api-label">
+                <svg width="11" height="11" viewBox="0 0 11 11">
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="var(--mb)" stroke-width="1" fill="none" />
+                  <path d="M3.5 5.5l1.5 1.5L8 3.5" stroke="var(--mb)" stroke-width="1" />
+                </svg>
+                <span style="color:var(--mb)">MALWAREBAZAAR</span><span style="color:var(--muted)"> · </span><span
+                  style="color:var(--uh)">URLHAUS</span>
+              </label>
+              <div class="key-input-wrap">
+                <input type="password" class="api-input" id="abch-key" placeholder="abuse.ch Auth-Key…"
+                  autocomplete="off" oninput="updateStatusDots()">
+                <button class="key-toggle" onclick="toggleKey('abch-key')">SHOW</button>
+              </div>
+              <div class="api-note">Free key at <a href="https://abuse.ch/api" target="_blank"
+                  style="color:var(--mb)">abuse.ch</a> · MB: MD5·SHA1·SHA256 · UH: URLs·SHA256</div>
+            </div>
+          </div>
+          <div class="free-sources-bar">
+            <span class="free-src-badge">NO KEY REQUIRED</span>
+            <div class="free-src-items">
+              <div class="free-src-item"><span class="free-dot" style="background:var(--sh)"></span><span
+                  style="color:var(--sh)">SHODAN INTERNETDB</span><span class="free-tag">shodan.io</span><span
+                  class="free-desc">IPv4→ports·CVEs</span></div>
+            </div>
+          </div>
 
-  <div class="progress-container" id="progress-container" style="display:none">
-    <div class="progress-header-row">
-      <div class="progress-label" id="progress-label">ANALYZING…</div>
-      <div class="progress-stats" id="progress-stats">0 / 0</div>
-    </div>
-    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-    <div class="progress-sub" id="progress-sub"></div>
+
+          <div class="api-actions">
+            <button class="btn btn-save" onclick="saveKeys()">
+              <svg width="12" height="12" viewBox="0 0 12 12">
+                <path d="M2 2h6l2 2v6H2V2z" stroke="currentColor" stroke-width="1" fill="none" />
+                <rect x="4" y="7" width="4" height="3" stroke="currentColor" stroke-width="1" />
+                <rect x="4" y="2" width="2" height="3" fill="currentColor" />
+              </svg>
+              SAVE KEYS
+            </button>
+            <button class="btn btn-clear-keys" onclick="clearKeys()">CLEAR</button>
+            <div class="key-saved-msg" id="key-saved-msg"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="input-panel">
+        <div class="panel-header-static">
+          <div class="panel-title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="1" width="11" height="11" stroke="var(--accent2)" stroke-width="1" />
+              <path d="M3 4h7M3 6.5h7M3 9h4" stroke="var(--accent2)" stroke-width="1" />
+            </svg>
+            BULK IOC INPUT
+          </div>
+          <div class="ioc-parsed-info" id="ioc-parsed-info"></div>
+        </div>
+        <div class="panel-body">
+          <div class="input-tabs">
+            <button class="input-tab active" onclick="switchInputTab('text',this)">PASTE / LOG</button>
+            <button class="input-tab" onclick="switchInputTab('file',this)">FILE UPLOAD</button>
+          </div>
+
+          <div class="tab-pane active" id="tab-text">
+            <textarea class="ioc-textarea" id="ioc-input"
+              placeholder="Paste IOCs or raw logs — VERDIKT auto-extracts&#10;&#10;Clean IOCs (one per line):&#10;  8.8.8.8 · malware.example.com · d41d8cd98f00b204e9800998ecf8427e&#10;&#10;Or paste raw firewall/SIEM logs:&#10;  Jan 15 10:23:44 fw1 src=192.0.2.10 dst=203.0.113.5 action=deny url=http://evil.com&#10;  Received: from [198.51.100.1] by mail.example.com&#10;&#10;Defanged IOCs supported: hxxp[://]  evil[.]com  1[.]2[.]3[.]4"
+              oninput="parseIOCsRealtime()"></textarea>
+            <div class="textarea-hint">Auto-detects: IPv4 · IPv6 · Domain · URL · MD5 · SHA1 · SHA256 · SHA512 · Email ·
+              Dedup · Defang · Log extraction (SIEM/firewall/email headers)</div>
+          </div>
+
+          <div class="tab-pane" id="tab-file">
+            <div class="upload-zone" id="upload-zone" ondragover="handleDragOver(event)"
+              ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+              onclick="document.getElementById('file-input').click()">
+              <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                <path d="M10 30v6h24v-6" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" />
+                <path d="M22 8v22M14 18l8-10 8 10" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              <div class="upload-text">DROP FILE OR CLICK TO BROWSE</div>
+              <div class="upload-formats">.txt · .csv · .xlsx · .json</div>
+              <div class="upload-badge" id="upload-badge" style="display:none"></div>
+            </div>
+            <input type="file" id="file-input" accept=".txt,.csv,.xlsx,.xls,.json" style="display:none"
+              onchange="handleFileUpload(event)">
+          </div>
+
+          <div class="ioc-breakdown" id="ioc-breakdown" style="display:none">
+            <div class="breakdown-title">DETECTED IOC TYPES</div>
+            <div class="breakdown-chips" id="breakdown-chips"></div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" id="scan-btn" onclick="startScan()" disabled>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+                <path d="M7 4.5v2.5l1.8 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+              ANALYZE
+            </button>
+            <button class="btn btn-stop" id="stop-btn" onclick="stopScan()" style="display:none">■ STOP</button>
+            <button class="btn btn-secondary" onclick="clearAll()">CLEAR</button>
+            <div class="rate-limit-note">
+              <svg width="11" height="11" viewBox="0 0 11 11">
+                <circle cx="5.5" cy="5.5" r="4.5" stroke="var(--muted)" stroke-width="1" />
+                <path d="M5.5 3.5v2.5l1.5 1.5" stroke="var(--muted)" stroke-width="1" stroke-linecap="round" />
+              </svg>
+              <span id="rate-note-text">Parallel engine · token bucket rate limiting</span>
+            </div>
+            <div class="scan-count" id="scan-count"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="progress-container" id="progress-container" style="display:none">
+        <div class="progress-header-row">
+          <div class="progress-label" id="progress-label">ANALYZING…</div>
+          <div class="progress-stats" id="progress-stats">0 / 0</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-sub" id="progress-sub"></div>
+      </div>
+
+      <section class="panel" id="results-panel" style="display:none">
+        <div class="panel-header-static">
+          <div class="panel-title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M1 1h11v11H1z" stroke="var(--accent)" stroke-width="1" />
+              <path d="M3 5h7M3 7.5h7M3 10h4" stroke="var(--accent)" stroke-width="1" />
+            </svg>
+            VERDIKT RESULTS
+          </div>
+          <div class="results-meta" id="results-meta"></div>
+          <div class="export-buttons">
+            <span class="export-label">EXPORT:</span>
+            <button class="btn btn-export" onclick="exportResults('json')">JSON</button>
+            <button class="btn btn-export" onclick="exportResults('csv')">CSV</button>
+            <button class="btn btn-export" onclick="exportResults('xlsx')"
+              title="Includes analyst report + block list sheets">XLSX ★</button>
+          </div>
+        </div>
+
+        <div class="summary-strip" id="summary-strip"></div>
+
+        <div class="decision-panel" id="decision-panel" style="display:none"></div>
+
+        <div class="result-filter-bar">
+          <div class="filter-group">
+            <span class="filter-bar-label">VERDICT:</span>
+            <button class="result-filter active" data-filter="all" onclick="filterResults('all',this)">ALL</button>
+            <button class="result-filter" data-filter="malicious" onclick="filterResults('malicious',this)">🔴
+              MAL</button>
+            <button class="result-filter" data-filter="suspicious" onclick="filterResults('suspicious',this)">🟡
+              SUS</button>
+            <button class="result-filter" data-filter="benign" onclick="filterResults('benign',this)">🟢 BENIGN</button>
+            <button class="result-filter" data-filter="unknown" onclick="filterResults('unknown',this)">⚪
+              UNKNOWN</button>
+          </div>
+          <div class="filter-group">
+            <span class="filter-bar-label">TYPE:</span>
+            <button class="result-filter active" data-type-filter="all" onclick="filterByType('all',this)">ALL</button>
+            <button class="result-filter" data-type-filter="ip" onclick="filterByType('ip',this)">IP</button>
+            <button class="result-filter" data-type-filter="domain" onclick="filterByType('domain',this)">DOM</button>
+            <button class="result-filter" data-type-filter="url" onclick="filterByType('url',this)">URL</button>
+            <button class="result-filter" data-type-filter="hash" onclick="filterByType('hash',this)">HASH</button>
+            <button class="result-filter" data-type-filter="email" onclick="filterByType('email',this)">EMAIL</button>
+          </div>
+          <div class="search-wrap">
+            <input type="text" class="result-search" id="result-search" placeholder="SEARCH IOC…"
+              oninput="searchResults(this.value)">
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="results-table" id="results-table">
+            <thead>
+              <tr>
+                <th class="col-ioc">IOC</th>
+                <th class="col-type">TYPE</th>
+                <th class="col-verdict">VERDICT · SCORE · CONFIDENCE</th>
+                <th class="col-action">ACTION · REASON</th>
+                <th class="col-indicators">KEY INDICATORS</th>
+                <th class="col-dates">FIRST · LAST SEEN</th>
+                <th class="col-detail">DETAIL</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener" class="footer-brand">H3AD-SEC</a>
+        <span class="footer-sep">/</span>
+        <span class="footer-project">VERDIKT</span>
+        <span class="footer-sep">//</span>
+        <span class="footer-muted">VT · AbuseIPDB · OTX · MalwareBazaar · Shodan · URLhaus</span>
+        <span class="footer-sep">//</span>
+        <span class="footer-muted" id="footer-key-note">Keys in localStorage</span>
+        <span class="footer-sep">//</span>
+        <span class="footer-muted">Intelligence. Detection. Response.</span>
+      </div>
+    </footer>
   </div>
 
-  <section class="panel" id="results-panel" style="display:none">
-    <div class="panel-header-static">
-      <div class="panel-title">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1h11v11H1z" stroke="var(--accent)" stroke-width="1"/><path d="M3 5h7M3 7.5h7M3 10h4" stroke="var(--accent)" stroke-width="1"/></svg>
-        VERDIKT RESULTS
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title"></div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
-      <div class="results-meta" id="results-meta"></div>
-      <div class="export-buttons">
-        <span class="export-label">EXPORT:</span>
-        <button class="btn btn-export" onclick="exportResults('json')">JSON</button>
-        <button class="btn btn-export" onclick="exportResults('csv')">CSV</button>
-        <button class="btn btn-export" onclick="exportResults('xlsx')" title="Includes analyst report + block list sheets">XLSX ★</button>
-      </div>
+      <div class="modal-body" id="modal-body"></div>
     </div>
-
-    <div class="summary-strip" id="summary-strip"></div>
-
-    <div class="decision-panel" id="decision-panel" style="display:none"></div>
-
-    <div class="result-filter-bar">
-      <div class="filter-group">
-        <span class="filter-bar-label">VERDICT:</span>
-        <button class="result-filter active" data-filter="all"        onclick="filterResults('all',this)">ALL</button>
-        <button class="result-filter"        data-filter="malicious"  onclick="filterResults('malicious',this)">🔴 MAL</button>
-        <button class="result-filter"        data-filter="suspicious" onclick="filterResults('suspicious',this)">🟡 SUS</button>
-        <button class="result-filter"        data-filter="benign"     onclick="filterResults('benign',this)">🟢 BENIGN</button>
-        <button class="result-filter"        data-filter="unknown"    onclick="filterResults('unknown',this)">⚪ UNKNOWN</button>
-      </div>
-      <div class="filter-group">
-        <span class="filter-bar-label">TYPE:</span>
-        <button class="result-filter active" data-type-filter="all"    onclick="filterByType('all',this)">ALL</button>
-        <button class="result-filter"        data-type-filter="ip"     onclick="filterByType('ip',this)">IP</button>
-        <button class="result-filter"        data-type-filter="domain" onclick="filterByType('domain',this)">DOM</button>
-        <button class="result-filter"        data-type-filter="url"    onclick="filterByType('url',this)">URL</button>
-        <button class="result-filter"        data-type-filter="hash"   onclick="filterByType('hash',this)">HASH</button>
-        <button class="result-filter"        data-type-filter="email"  onclick="filterByType('email',this)">EMAIL</button>
-      </div>
-      <div class="search-wrap">
-        <input type="text" class="result-search" id="result-search" placeholder="SEARCH IOC…" oninput="searchResults(this.value)">
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table class="results-table" id="results-table">
-        <thead>
-          <tr>
-            <th class="col-ioc">IOC</th>
-            <th class="col-type">TYPE</th>
-            <th class="col-verdict">VERDICT · SCORE · CONFIDENCE</th>
-            <th class="col-action">ACTION · REASON</th>
-            <th class="col-indicators">KEY INDICATORS</th>
-            <th class="col-dates">FIRST · LAST SEEN</th>
-            <th class="col-detail">DETAIL</th>
-          </tr>
-        </thead>
-        <tbody id="results-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-</main>
-
-<footer class="site-footer">
-  <div class="footer-inner">
-    <a href="https://h3ad-sec.github.io" target="_blank" rel="noopener" class="footer-brand">H3AD-SEC</a>
-    <span class="footer-sep">/</span>
-    <span class="footer-project">VERDIKT</span>
-    <span class="footer-sep">//</span>
-    <span class="footer-muted">VT · AbuseIPDB · OTX · MalwareBazaar · Shodan · URLhaus</span>
-    <span class="footer-sep">//</span>
-    <span class="footer-muted" id="footer-key-note">Keys in localStorage</span>
-    <span class="footer-sep">//</span>
-    <span class="footer-muted">Intelligence. Detection. Response.</span>
   </div>
-</footer>
-</div>
 
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title"></div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-  </div>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="js/ioc-parser.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/ioc-parser.js"></script>
-<script src="js/api.js"></script>
-<script src="js/scanner.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/export.js"></script>
-<script src="js/app.js"></script>
+  <script>
+    /* ── NAV ──────────────────────────────────────────────────────────────────── */
+    function toggleDrawer() { document.getElementById('navDrawer').classList.toggle('open'); }
+    function closeDrawer() { document.getElementById('navDrawer').classList.remove('open'); }
+    document.addEventListener('click', e => { const d = document.getElementById('navDrawer'), h = document.getElementById('hamburger'); if (d.classList.contains('open') && !d.contains(e.target) && !h.contains(e.target)) closeDrawer(); });
 
-<script>
-/* ── NAV ──────────────────────────────────────────────────────────────────── */
-function toggleDrawer(){document.getElementById('navDrawer').classList.toggle('open');}
-function closeDrawer(){document.getElementById('navDrawer').classList.remove('open');}
-document.addEventListener('click',e=>{const d=document.getElementById('navDrawer'),h=document.getElementById('hamburger');if(d.classList.contains('open')&&!d.contains(e.target)&&!h.contains(e.target))closeDrawer();});
+    /* ── THEME ────────────────────────────────────────────────────────────────── */
+    function updateNavLogo(t) { const el = document.getElementById('navLogo'); if (el) el.src = t === 'light' ? 'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-light.png' : 'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png'; }
+    function toggleTheme() { const l = document.body.classList.toggle('light'); document.body.classList.toggle('dark', !l); const t = l ? 'light' : 'dark'; localStorage.setItem('theme', t); updateNavLogo(t); }
+    const _t = localStorage.getItem('theme');
+    if (_t === 'light') { document.body.classList.add('light'); document.body.classList.remove('dark'); updateNavLogo('light'); }
+    else { document.body.classList.add('dark'); document.body.classList.remove('light'); updateNavLogo('dark'); }
 
-/* ── THEME ────────────────────────────────────────────────────────────────── */
-function updateNavLogo(t){const el=document.getElementById('navLogo');if(el)el.src=t==='light'?'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-light.png':'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png';}
-function toggleTheme(){const l=document.body.classList.toggle('light');document.body.classList.toggle('dark',!l);const t=l?'light':'dark';localStorage.setItem('theme',t);updateNavLogo(t);}
-const _t=localStorage.getItem('theme');
-if(_t==='light'){document.body.classList.add('light');document.body.classList.remove('dark');updateNavLogo('light');}
-else{document.body.classList.add('dark');document.body.classList.remove('light');updateNavLogo('dark');}
+    function updateVTPaidBadge() { const paid = document.getElementById('vt-paid')?.checked; const b = document.getElementById('vt-paid-badge'); if (b) b.style.display = paid ? '' : 'none'; }
 
-function updateVTPaidBadge(){const paid=document.getElementById('vt-paid')?.checked;const b=document.getElementById('vt-paid-badge');if(b)b.style.display=paid?'':'none';}
-
-const canvas=document.getElementById('matrix'),ctx=canvas.getContext('2d');
-const chars=['443','80','8443','3389','445','22','53','T1003','T1059','T1047','T1021','T1566','T1071','T1218','T1547','T1486','T1055','T1105','IOC','IOA','YARA','SIGMA','STIX2','TAXII','Enrichment','Correlation','Attribution','ThreatHunt','MD5','SHA1','SHA256','SHA512','Detection','Response','Containment','Triage','Indicator','Feed','Pulse','CVE','CVSS','Exploit','Payload','Analysis','Sandbox','Reputation','Blocklist','Allowlist','Firewall','EDR','XDR','SIEM','SOAR','4624','4625','4688','4672','4768','4769','IAM','AzureAD','OAuth','CloudTrail','BLOCK','INVESTIGATE','ALLOW','MONITOR','VERDIKT','MALICIOUS','SUSPICIOUS','BENIGN','UNKNOWN','VT','ABUSEIPDB','OTX','SHODAN','URLHAUS','H3AD-SEC'];
-let drops=[];
-function initMatrix(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drops=Array(Math.floor(window.innerWidth/18)).fill(1);}
-function drawMatrix(){const l=document.body.classList.contains('light');ctx.fillStyle=l?'rgba(245,247,251,0.08)':'rgba(0,0,0,0.12)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=l?'#0077ff':'#00ff9f';ctx.font='12px monospace';for(let i=0;i<drops.length;i++){ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*18,drops[i]*18);if(drops[i]*18>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}}
-window.addEventListener('resize',initMatrix);initMatrix();setInterval(drawMatrix,45);
-</script>
+    const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
+    const chars = ['443', '80', '8443', '3389', '445', '22', '53', 'T1003', 'T1059', 'T1047', 'T1021', 'T1566', 'T1071', 'T1218', 'T1547', 'T1486', 'T1055', 'T1105', 'IOC', 'IOA', 'YARA', 'SIGMA', 'STIX2', 'TAXII', 'Enrichment', 'Correlation', 'Attribution', 'ThreatHunt', 'MD5', 'SHA1', 'SHA256', 'SHA512', 'Detection', 'Response', 'Containment', 'Triage', 'Indicator', 'Feed', 'Pulse', 'CVE', 'CVSS', 'Exploit', 'Payload', 'Analysis', 'Sandbox', 'Reputation', 'Blocklist', 'Allowlist', 'Firewall', 'EDR', 'XDR', 'SIEM', 'SOAR', '4624', '4625', '4688', '4672', '4768', '4769', 'IAM', 'AzureAD', 'OAuth', 'CloudTrail', 'BLOCK', 'INVESTIGATE', 'ALLOW', 'MONITOR', 'VERDIKT', 'MALICIOUS', 'SUSPICIOUS', 'BENIGN', 'UNKNOWN', 'VT', 'ABUSEIPDB', 'OTX', 'SHODAN', 'URLHAUS', 'H3AD-SEC'];
+    let drops = [];
+    function initMatrix() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; drops = Array(Math.floor(window.innerWidth / 18)).fill(1); }
+    function drawMatrix() { const l = document.body.classList.contains('light'); ctx.fillStyle = l ? 'rgba(245,247,251,0.08)' : 'rgba(0,0,0,0.12)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = l ? '#0077ff' : '#00ff9f'; ctx.font = '12px monospace'; for (let i = 0; i < drops.length; i++) { ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 18, drops[i] * 18); if (drops[i] * 18 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; } }
+    window.addEventListener('resize', initMatrix); initMatrix(); setInterval(drawMatrix, 45);
+  </script>
 </body>
+
 </html>
