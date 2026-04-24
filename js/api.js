@@ -43,8 +43,7 @@ const API = {
     else if (t==='url')             path = `/api/v1/indicators/url/${encodeURIComponent(ioc.value)}/general`;
     else if (t.startsWith('hash'))  path = `/api/v1/indicators/file/${ioc.value}/general`;
     else if (t==='email') {
-      const domain = ioc.value.split('@')[1];
-      path = `/api/v1/indicators/domain/${domain}/general`;
+      return { source:'otx', skipped:true, reason:'No email indicator — domain lookup false-positives on major providers' };
     } else return { source:'otx', skipped:true, reason:'Unsupported type' };
     try {
       const resp = SERVER_MODE

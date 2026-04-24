@@ -163,8 +163,8 @@ function extractLastSeen(vt, ab, mb, uh) {
 }
 
 function maxScoreForType(type) {
-  let max = 8;
-  if (type !== 'email') max += 40;
+  if (type === 'email') return 0;
+  let max = 48;
   if (type === 'ip' || type === 'ipv6') max += 30;
   if (type === 'hash_md5' || type === 'hash_sha1' || type === 'hash_sha256' || type === 'url') max += 10;
   if (type === 'ip') max += 8;
@@ -234,7 +234,7 @@ function scoreEntry(entry) {
   }
 
   const maxPossible = maxScoreForType(entry.ioc.type);
-  score = Math.min(100, Math.round((score / maxPossible) * 100));
+  score = maxPossible > 0 ? Math.min(100, Math.round((score / maxPossible) * 100)) : 0;
 
   const abScore=(ab&&!ab.skipped&&!ab.error)?(ab.score||0):0;
   const vtMal=(vt&&!vt.skipped&&!vt.error)?(vt.malicious||0):0;

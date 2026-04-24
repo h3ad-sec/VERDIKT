@@ -235,8 +235,8 @@ function toggleScoreBreakdown(btn) {
 }
 
 function computeMaxScoreForType(type) {
-  let max = 15;
-  if (type !== 'email') max += 40;
+  if (type === 'email') return 0;
+  let max = 55;
   if (type === 'ip' || type === 'ipv6') max += 30;
   if (['hash_md5','hash_sha1','hash_sha256','url'].includes(type)) max += 10;
   if (type === 'ip') max += 8;
@@ -339,7 +339,7 @@ function buildScoreBreakdown(entry) {
   }
 
   const maxPossible = computeMaxScoreForType(type);
-  const normalized = Math.min(100, Math.round((rawTotal / maxPossible) * 100));
+  const normalized = maxPossible > 0 ? Math.min(100, Math.round((rawTotal / maxPossible) * 100)) : 0;
 
   const rowsHtml = rows.map(r => {
     const ptsDisplay = r.raw !== null ? r.raw : '—';
