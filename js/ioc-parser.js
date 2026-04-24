@@ -140,6 +140,8 @@ function extractFromLog(text) {
 
 function defang(token) {
   return token
+    .replace(/\[at\]/gi, '@')
+    .replace(/\(at\)/gi, '@')
     .replace(/hxxps?/gi, m => m.replace(/xx/i, 'tt'))
     .replace(/\[:\/\/\]/g, '://')
     .replace(/\(:\/\/\)/g, '://')

@@ -246,7 +246,7 @@ function buildVTLink(id, type) {
 }
 function buildOTXLink(data, type) {
   if (type==='ip'||type==='ipv6')  return `https://otx.alienvault.com/indicator/ip/${data?.indicator||''}`;
-  if (type==='domain')              return `https://otx.alienvault.com/indicator/domain/${data?.indicator||''}`;
+  if (type==='domain'||type==='email') return `https://otx.alienvault.com/indicator/domain/${data?.indicator||''}`;
   if (type==='url')                 return `https://otx.alienvault.com/indicator/url/${encodeURIComponent(data?.indicator||'')}`;
   if (type?.startsWith('hash'))     return `https://otx.alienvault.com/indicator/file/${data?.indicator||''}`;
   return 'https://otx.alienvault.com';
