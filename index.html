@@ -14,6 +14,7 @@
 </head>
 
 <body class="dark">
+  <div id="scroll-sentinel" aria-hidden="true"></div>
   <canvas id="matrix"></canvas>
 
   <nav class="nav">
@@ -21,6 +22,10 @@
     <a class="nav-brand" href="https://h3ad-sec.github.io" target="_blank" rel="noopener">
       <img id="navLogo" src="https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png"
         alt="H3AD-SEC" style="height:22px;vertical-align:middle;">
+    </a>
+    <a class="xv-nav-pill" id="xv-nav-pill" href="https://h3ad-sec.github.io/VERDIKT/" style="text-decoration:none">
+      <span class="xv-pill-name"><span class="xv-pill-accent">VER</span><span class="xv-pill-text">DIKT</span></span>
+      <span class="xv-pill-tagline">Every IOC. One verdict.</span>
     </a>
     <div class="nav-links">
       <div class="nav-divider"></div>
@@ -490,6 +495,9 @@
     function toggleDrawer() { document.getElementById('navDrawer').classList.toggle('open'); }
     function closeDrawer() { document.getElementById('navDrawer').classList.remove('open'); }
     document.addEventListener('click', e => { const d = document.getElementById('navDrawer'), h = document.getElementById('hamburger'); if (d.classList.contains('open') && !d.contains(e.target) && !h.contains(e.target)) closeDrawer(); });
+
+    /* ── HERO SCROLL HIDE ── */
+    (function(){var s=document.getElementById('scroll-sentinel');if(!s)return;new IntersectionObserver(function(e){document.body.classList.toggle('hero-hidden',!e[0].isIntersecting);},{threshold:0}).observe(s);})();
 
     /* ── THEME ────────────────────────────────────────────────────────────────── */
     function updateNavLogo(t) { const el = document.getElementById('navLogo'); if (el) el.src = t === 'light' ? 'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-light.png' : 'https://raw.githubusercontent.com/h3ad-sec/h3ad-sec.github.io/main/logo-dark.png'; }
