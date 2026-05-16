@@ -1,257 +1,102 @@
 # VERDIKT
 
-Every IOC. One verdict.
+**Every IOC. One Verdict.**
 
-Bulk IOC intelligence checker — 6 sources, instant verdicts, built for SOC analysts and detection engineers. Runs entirely in the browser.  
-**API keys stored in Vercel environment variables** — never exposed to the client.
+Bulk IOC intelligence checker built for SOC analysts and detection engineers. Paste a list of IPs, domains, URLs, or file hashes — get a consolidated threat verdict powered by six intelligence sources in parallel.
 
----
-
-## Key Architecture Change — Server vs Browser Mode
-
-| Mode | How keys are stored | When it activates |
-|------|--------------------|--------------------|
-| **Server Mode** | Vercel environment variables | Deployed to Vercel with env vars set |
-| **Browser Mode** | Browser localStorage | GitHub Pages / Netlify / local dev |
-
-On startup, the app hits `/api/status`. If Vercel serverless functions are running, it enters **Server Mode** and hides the API key panel entirely. Keys never reach the browser. If `/api/status` returns a network error (static host), it falls back to **Browser Mode** with localStorage keys.
+Live: [h3ad-sec.github.io/VERDIKT](https://h3ad-sec.github.io/VERDIKT/)
 
 ---
 
-## Deploy to Vercel (Server Mode — Recommended)
+## What it does
 
-### Step 1 — Push to GitHub
-
-```bash
-cd verdikt
-git init
-git add .
-git commit -m "VERDIKT v1.0"
-git remote add origin https://github.com/YOUR_USERNAME/verdikt.git
-git push -u origin main
-```
-
-### Step 2 — Import to Vercel
-
-1. Go to [vercel.com/new](https://vercel.com/new)
-2. Click **"Import Git Repository"**
-3. Select your `verdikt` repo
-4. Framework Preset: **Other** (it's a static site + serverless functions)
-5. Click **Deploy**
-
-### Step 3 — Add Environment Variables
-
-In your Vercel project dashboard:  
-**Settings → Environment Variables**
-
-Add these variables:
-
-| Variable | Required | Get it from | Notes |
-|----------|----------|-------------|-------|
-| `VT_API_KEY` | Recommended | [virustotal.com](https://www.virustotal.com) → Sign up → API Key | Free: 4 req/min, 500/day. Paid: unlimited |
-| `ABUSEIPDB_API_KEY` | Recommended | [abuseipdb.com](https://www.abuseipdb.com) → Account → API | Free: 1,000 req/day. IPs only |
-| `OTX_API_KEY` | Recommended | [otx.alienvault.com](https://otx.alienvault.com) → Settings → API Key | Free, generous limits. Covers all IOC types |
-| `ABUSECH_AUTH_KEY` | Recommended | [abuse.ch](https://abuse.ch/api) → Register free | Required for MalwareBazaar + URLhaus since late 2024 |
-| `VT_PAID` | Optional | — | Set to `true` if you have a paid VT subscription. Removes rate limiting |
-
-**What happens without each key:**
-- No `VT_API_KEY` → VirusTotal skipped for all IOCs
-- No `ABUSEIPDB_API_KEY` → AbuseIPDB skipped for all IPs
-- No `OTX_API_KEY` → OTX skipped for all IOCs
-- No `ABUSECH_AUTH_KEY` → MalwareBazaar and URLhaus return 401, shown as error
-- No `VT_PAID` → defaults to free-tier rate limiting (4 req/min token bucket)
-
-At minimum, add `VT_API_KEY` — VirusTotal covers the widest range of IOC types and carries the most scoring weight.
-
-Set each variable for **Production**, **Preview**, and **Development** environments.
-
-### Step 4 — Redeploy
-
-After adding env vars, go to **Deployments → Redeploy** (or push a new commit).
-
-The app will detect server mode automatically. The API key panel disappears and a **SERVER KEYS** badge appears in the header.
-
-### Using Vercel CLI instead
-
-```bash
-npm i -g vercel
-vercel                          # Deploy + follow prompts
-vercel env add VT_API_KEY       # Add each key interactively
-vercel env add ABUSEIPDB_API_KEY
-vercel env add OTX_API_KEY
-vercel env add VT_PAID
-vercel env add ABUSECH_AUTH_KEY
-vercel --prod                   # Redeploy to production
-```
+- Accepts IPv4, IPv6, domains, URLs, email addresses, and MD5 / SHA-1 / SHA-256 / SHA-512 hashes
+- Auto-detects IOC types and handles defanged indicators (`hxxp://`, `1[.]2[.]3[.]4`, `[dot]`)
+- Extracts IOCs from raw SIEM log lines and firewall exports
+- Deduplicates input automatically and skips private / RFC1918 IPs
+- Runs all sources in parallel — no waiting for one before the next starts
 
 ---
 
-## Alternative Deploys (Browser Mode)
+## Intelligence sources
 
-These hosts don't run serverless functions. The app falls back to localStorage keys automatically.
-
-### Netlify
-
-```bash
-npm i -g netlify-cli
-netlify deploy --dir . --prod
-```
-
-Or drag-and-drop at [app.netlify.com/drop](https://app.netlify.com/drop).
-
-### GitHub Pages
-
-The `.github/workflows/deploy.yml` included auto-deploys on every push:
-
-```bash
-git push origin main   # triggers GitHub Actions → deploys to Pages
-```
-
-Enable Pages: **Settings → Pages → Branch: main → Save**
+| Source | IOC types |
+|--------|-----------|
+| VirusTotal | IP, Domain, URL, Hash |
+| AbuseIPDB | IPv4, IPv6 |
+| AlienVault OTX | IP, Domain, URL, Hash |
+| MalwareBazaar | MD5, SHA-1, SHA-256 |
+| URLhaus | URL, SHA-256 |
+| Shodan InternetDB | IPv4 — ports, CVEs, threat tags |
 
 ---
 
-## Themes
+## Output per IOC
 
-Click the **DARK·G / DARK·B / DARK·R / LIGHT** button in the header to cycle through 4 themes. Selection is persisted in localStorage.
+Each IOC produces six components:
 
-| Theme | Description |
-|-------|-------------|
-| **DARK·G** | Terminal green — default SOC aesthetic |
-| **DARK·B** | Cyber blue — cooler palette |
-| **DARK·R** | Red ops — high-contrast red accent |
-| **LIGHT** | Day mode — light background for bright environments |
-
----
-
-## Sources
-
-| Source | Key Required | IOC Types | Free Limits |
-|--------|-------------|-----------|-------------|
-| VirusTotal | ✅ | IP · Domain · URL · MD5/SHA1/SHA256/SHA512 | 4 req/min · 500/day (free) |
-| AbuseIPDB | ✅ | IPv4 · IPv6 | 1,000 req/day |
-| AlienVault OTX | ✅ | All types incl. Email | Generous |
-| MalwareBazaar | ✅ Free (abuse.ch) | MD5 · SHA1 · SHA256 | No limit |
-| URLhaus | ✅ Free (abuse.ch) | URLs · SHA256 | No limit |
-| Shodan InternetDB | ❌ Free | IPv4 | No limit |
-
-**Why AbuseIPDB doesn't check hashes:**  
-AbuseIPDB is an IP reputation database by design — no hash API exists. Hashes are automatically routed to MalwareBazaar (MD5/SHA1/SHA256) and URLhaus (SHA256 + URLs).
+- **Verdict** — MALICIOUS / SUSPICIOUS / BENIGN / UNKNOWN
+- **Risk score** — 0–100 normalized across sources
+- **Confidence** — HIGH / MEDIUM / LOW / INFORMATIONAL
+- **Action** — BLOCK / INVESTIGATE / ALLOW / MONITOR
+- **Reason summary** — auto-generated from source data
+- **Score breakdown** — per-source table in the detail modal
 
 ---
 
-## IOC Type Routing
+## Modes
 
-| Type | VT | AbuseIPDB | OTX | MalwareBazaar | URLhaus | Shodan |
-|------|----|-----------|-----|---------------|---------|--------|
-| IPv4 | ✅ | ✅ | ✅ | — | — | ✅ |
-| IPv6 | ✅ | ✅ | ✅ | — | — | — |
-| Domain | ✅ | — | ✅ | — | — | — |
-| URL | ✅ | — | ✅ | — | ✅ | — |
-| MD5 | ✅ | — | ✅ | ✅ | — | — |
-| SHA1 | ✅ | — | ✅ | ✅ | — | — |
-| SHA256 | ✅ | — | ✅ | ✅ | ✅ | — |
-| SHA512 | ✅ | — | ✅ | — | — | — |
-| Email | — | — | ✅* | — | — | — |
+**BYOK** — enter your own API keys in the browser. Keys are stored in localStorage and never sent anywhere except the upstream APIs.
 
-*OTX checks the email's domain
+**Managed** — API keys configured server-side. The frontend detects the backend on load and switches modes automatically. No key setup needed on the client.
 
 ---
 
-## File Structure
+## Features
+
+- Bulk textarea input and file upload (.txt, .csv, .json, .xlsx)
+- Quick single-IOC lookup bar
+- Verdict filter (Malicious / Suspicious / Benign / Unknown) and type filter
+- Detail modal with per-source raw data and scoring breakdown
+- Export: CSV, JSON, Excel (full results + analyst report + block list)
+- Dark / light theme with matrix background
+
+---
+
+## Stack
+
+- Vanilla JS, HTML, CSS — no framework, no build step
+- GitHub Pages (static frontend)
+- Vercel serverless functions (managed mode backend)
+
+---
+
+## File structure
 
 ```
-verdikt/
-├── index.html                      # Main single-page app
-├── vercel.json                     # Vercel routing + headers config
-├── css/
-│   └── style.css                   # 4 themes via CSS variables
+VERDIKT/
+├── index.html
+├── css/style.css
 ├── js/
-│   ├── ioc-parser.js               # IOC detection, defang support
-│   ├── api.js                      # 6 sources — server/browser routing
-│   ├── scanner.js                  # Orchestration, rate limiting, stop
-│   ├── ui.js                       # Render, theme system, modal, filters
-│   ├── export.js                   # JSON / CSV / XLSX
-│   └── app.js                      # Init, mode detection, file upload
-├── api/                            # Vercel serverless functions (Node.js)
-│   ├── vt.js                       # VirusTotal proxy
-│   ├── abuseipdb.js                # AbuseIPDB proxy
-│   ├── otx.js                      # AlienVault OTX proxy
-│   └── status.js                   # Key health check (no values exposed)
-└── .github/
-    └── workflows/deploy.yml        # GitHub Pages auto-deploy
+│   ├── ioc-parser.js   — IOC detection, defang, log extraction
+│   ├── api.js          — 6 source integrations, BYOK + managed routing
+│   ├── scanner.js      — parallel engine, rate limiting, scoring
+│   ├── ui.js           — table, modal, verdict rendering
+│   ├── export.js       — CSV / JSON / Excel export
+│   └── app.js          — init, mode detection, file upload
+└── api/                — Vercel serverless proxies (managed mode)
+    ├── vt.js
+    ├── abuseipdb.js
+    ├── otx.js
+    ├── malwarebazaar.js
+    ├── urlhaus.js
+    └── status.js
 ```
 
 ---
 
-## Keyboard Shortcuts
+## Part of H3AD-SEC
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl / Cmd + Enter` | Run scan |
-| `Esc` | Close detail modal |
+VERDIKT is a sub-tool under [H3AD-X](https://h3ad-sec.github.io/H3AD-X/) — Threat Intelligence hub of the [H3AD-SEC](https://h3ad-sec.github.io) platform.
 
----
-
-## Scoring Logic
-
-Each IOC is scored 0–100 and assigned a verdict. The score is normalized against the maximum possible for that IOC type — so a domain (max 55 raw points from VT + OTX) is scored fairly against an IP (max 93 raw points from all sources).
-
-### Source weights
-
-| Source | Max contribution | Notes |
-|--------|-----------------|-------|
-| VirusTotal | 40 pts | `(malicious engines / total engines) × 40` — only counts if `total > 0` |
-| AbuseIPDB | 30 pts | `(abuse score / 100) × 30` — IPs only |
-| AlienVault OTX | 15 pts | `(pulse count / 10) × 15`, capped at 15 |
-| MalwareBazaar | 10 pts | Binary — found in DB = 10, not found = 0 |
-| URLhaus | 10 pts | Binary — found in DB = 10, not found = 0 |
-| Shodan CVEs | up to 5 pts | 1 pt per CVE, capped at 5 |
-| Shodan threat tag | +3 pts | Flat bonus for TOR/honeypot/malware tags |
-
-### Maximum score per IOC type
-
-| Type | VT | AbuseIPDB | OTX | MB | URLhaus | Shodan | Max |
-|------|----|-----------|-----|----|---------|--------|-----|
-| IPv4 | 40 | 30 | 15 | — | — | 8 | **93** |
-| IPv6 | 40 | 30 | 15 | — | — | — | **85** |
-| Domain | 40 | — | 15 | — | — | — | **55** |
-| URL | 40 | — | 15 | — | 10 | — | **65** |
-| Email | — | — | 15 | — | — | — | **15** |
-| MD5 / SHA1 | 40 | — | 15 | 10 | — | — | **65** |
-| SHA256 | 40 | — | 15 | 10 | 10 | — | **75** |
-| SHA512 | 40 | — | 15 | — | — | — | **55** |
-
-### Verdict thresholds
-
-Verdicts use both the normalized score and direct signal flags — whichever triggers first wins:
-
-| Verdict | Triggers when… |
-|---------|----------------|
-| 🔴 **MALICIOUS / BLOCK** | Score ≥ 60, or VT ≥ 5 engines, or AbuseIPDB ≥ 75%, or any MB/URLhaus hit, or 2+ independent malicious sources |
-| 🟡 **SUSPICIOUS / INVESTIGATE** | Score ≥ 25, or any VT detection, or AbuseIPDB ≥ 25%, or OTX 1–4 pulses, or OTX 5+ pulses (single source) |
-| 🟢 **CLEAN / ALLOW** | At least 1 source checked, no threat signals found |
-| ⚪ **UNKNOWN / MONITOR** | No key-based sources ran and no free-source hit |
-
-### Confidence
-
-| Level | Condition |
-|-------|-----------|
-| **High** | 2+ malicious sources, or 3+ sources checked |
-| **Medium** | 2+ sources checked, or 1 malicious source confirmed |
-| **Low** | 0–1 source checked with no malicious signals |
-
----
-
-## Security Notes
-
-- In **Server Mode**, API keys exist only in Vercel's encrypted environment variable store. `/api/status` only returns `true/false` per key — never the key value itself.
-- In **Browser Mode**, keys are in localStorage — only your browser can read them.
-- MalwareBazaar, URLhaus, and Shodan are called directly from the browser — they require no keys and have permissive CORS.
-- No analytics, no telemetry, no third-party scripts beyond Google Fonts and the XLSX library.
-
----
-
-## License
-
-MIT
+Related tools: [X-VERDIKT](https://h3ad-sec.github.io/X-VERDIKT/) · [PARSE-X](https://h3ad-sec.github.io/PARSE-X/)
