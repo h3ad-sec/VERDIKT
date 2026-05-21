@@ -428,10 +428,11 @@ body.hero-hidden .wrapper{padding-top:calc(var(--nav-h) + 20px);}
 @media(max-width:700px){
   .result-filter-bar{flex-direction:column;align-items:flex-start;gap:8px;}
   .filter-group{flex-wrap:wrap;}
-  .search-wrap{margin-left:0;}
+  .search-wrap{margin-left:0;width:100%;}
+  .result-search{width:100%;}
   .export-buttons{margin-left:0;}
   .panel-header-static{flex-wrap:wrap;gap:8px;}
-  .table-wrap{overflow-x:visible;}
+  .table-wrap{overflow-x:auto;}
   .results-table{display:block;width:100%;}
   .results-table thead{display:none;}
   .results-table tbody{display:block;}
@@ -446,12 +447,44 @@ body.hero-hidden .wrapper{padding-top:calc(var(--nav-h) + 20px);}
   .results-table td:nth-child(7){grid-column:2;grid-row:3;display:flex;align-items:center;justify-content:flex-end;}
   .dc-reason{max-width:none;white-space:normal;}
   .td-ioc{max-width:none;}
+  .action-row{flex-wrap:wrap;gap:8px;}
+  .btn-primary{width:100%;}
+  .quick-ioc-bar{flex-wrap:wrap;}
+  .quick-ioc-input{min-width:0;width:100%;}
+  .dp-actions{flex-direction:column;}
+  .dp-action{width:100%;}
+  .api-actions{flex-wrap:wrap;}
+}
+
+@media(max-width:640px){
+  .filter-group{flex-wrap:wrap;gap:4px;}
+  .result-filter-bar{flex-wrap:wrap;}
+  .quick-ioc-bar{flex-wrap:wrap;gap:8px;}
+  .quick-ioc-input{width:100%;min-width:0;}
+  .btn-quick{width:100%;}
+  .action-row{flex-wrap:wrap;}
+  .export-buttons{width:100%;justify-content:flex-start;}
+  .scan-count{margin-left:0;width:100%;}
 }
 
 @media(max-width:480px){
   .mode-badge{display:none;}
   .hero-inner{gap:8px;}
   .mode-toggle-btn{padding:5px 10px;font-size:10px;}
+  .summary-strip{flex-wrap:nowrap;overflow-x:auto;}
+  .summary-card{min-width:70px;padding:10px 10px;}
+  .summary-num{font-size:18px;}
+  .panel-body{padding:14px;}
+  .modal-kv-grid{grid-template-columns:110px 1fr;}
+}
+
+@media(max-width:320px){
+  .wrapper{padding-left:10px;padding-right:10px;}
+  .btn{padding:8px 12px;font-size:10px;letter-spacing:1px;}
+  .btn-primary{padding:10px 14px;}
+  .ioc-textarea{min-height:120px;font-size:12px;}
+  .summary-card{min-width:60px;padding:8px 8px;}
+  .summary-num{font-size:16px;}
 }
 
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
